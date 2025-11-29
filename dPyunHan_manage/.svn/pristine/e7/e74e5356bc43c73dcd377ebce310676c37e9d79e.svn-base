@@ -1,0 +1,23 @@
+@charset "UTF-8";
+.filter-container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.filter-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.filter-label {
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.filter-label:hover {
+  transform: scale(1.1);
+}
