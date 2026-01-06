@@ -19,8 +19,7 @@ public class DbscanClustering {
 	 * Dbscan 알고리즘 인스턴스를 생성합니다.
 	 * @param epsilon 이웃을 탐색할 반경
 	 * @param minPts 코어 포인트가 되기 위한 최소 이웃 수
-	 */
-	
+	 */	
 	public DbscanClustering(
 			 @Value("${DbscanClustering.epsilon}") double epsilon,
 			 @Value("${DbscanClustering.minPts}") int minPts
@@ -40,8 +39,7 @@ public class DbscanClustering {
 	 * Dbscan 군집화를 수행합니다.
 	 * @param dataPoints 군집화할 데이터 포인트 리스트
 	 * @return 군집화된 데이터 포인트 리스트 (clusterId와 state가 할당된 상태)
-	 */
-	
+	 */	
 	public List<DbscanPoint> cluster(List<DbscanPoint> dataPoints){
 		if(dataPoints == null || dataPoints.isEmpty()) {
 			throw new IllegalArgumentException("데이터 포인트가 비어있습니다.");
@@ -49,8 +47,6 @@ public class DbscanClustering {
 		
 		this.dataPoints = dataPoints;
 		this.nextClusterId=1;
-		
-		System.out.println("DBSCAN 군집화 시작(Epsilon: "+ epsilon + ", MinPts: " + minPts+ ")...");
 		
 		//모든 데이터 포인트를 순회하며 군집 탐색
 		for(DbscanPoint p : dataPoints) {
@@ -62,7 +58,7 @@ public class DbscanClustering {
 				// 이웃 수가 minPts보다 적으면 노이즈로 잠정 분류합니다.
 				if(neighbors.size() <minPts) {
 					p.setClusterId(DbscanPoint.NOISE);
-					p.setState(DbscanPoint.PointState.NOISE); // 클래스의 PointState라는 중첩클래스? 아닌데 
+					p.setState(DbscanPoint.PointState.NOISE);
 					//Enum(열거형)**은 상수의 집합을 하나의 새 데이터타입(클래스처럼)으로 정의
 					//자바에서는 새로운 클래스를 만드는 것과 비슷하게 동작
 				} else {
@@ -99,9 +95,7 @@ public class DbscanClustering {
 	 * @param corePoint 현재 코어 포인트
 	 * @param neighbors 코어 포인트의 이웃 리스트
 	 * @param clusterId 현재 군집 ID
-	 */
-	
-								//             p                       p의 neighbor         1
+	 */								
 	private void expandCluster(DbscanPoint corePoint, List<DbscanPoint> neighbors, int clusterId){// private 메소드
 		corePoint.setClusterId(clusterId); //코어 포인트를 현재 군집에 할당
 		
@@ -120,8 +114,7 @@ public class DbscanClustering {
 			if(current.getClusterId()==DbscanPoint.NOISE) {
 				current.setClusterId(clusterId);
 				current.setState(DbscanPoint.PointState.BORDER); //노이즈에서 경계로 변경
-			}
-			
+			}			
 			
 			// 아직 분류되지 않은 포인트인 경우에만 처리
             if (current.getClusterId() == DbscanPoint.UNCLASSIFIED) {

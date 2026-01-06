@@ -11,7 +11,6 @@ public class DbscanPoint {
 		this.id = id;
 	}
 
-
 	private double x;
 	private double y;
 	private int clusterId;
@@ -22,7 +21,7 @@ public class DbscanPoint {
 	public static final int NOISE = -1;
 	
 	//포인트 상태를 나타내는 Enum
-	public enum PointState{ //Enum 쓰는 방법 기억하기 좋으다 // 중첩 클래스는 아닌데 ENUM 이거 개념이 뭐야? 
+	public enum PointState{ //Enum 쓰는 방법 기억하기 좋으다
 		//Enum(열거형)**은 상수의 집합을 하나의 새 데이터타입(클래스처럼)으로 정의
 		UNCLASSIFIED, CORE, BORDER, NOISE
 	}
@@ -75,7 +74,6 @@ public class DbscanPoint {
 	public double distanceTo(DbscanPoint other) {
 		return Math.sqrt(Math.pow(this.x-other.x,  2)+Math.pow(this.y-other.y, 2));
 	}
-	
 	
 	@Override
 	public String toString() {

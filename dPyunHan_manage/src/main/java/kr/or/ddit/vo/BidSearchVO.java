@@ -1,0 +1,48 @@
+package kr.or.ddit.vo;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import lombok.Data;
+
+@Data
+public class BidSearchVO {
+	// 검색 조건
+    private String keyword = "";
+    private String bidSttus = "";
+    private String scsbMth = "";
+    private String cdltPresentnAt = "";
+    private String acmsltproofPresentnAt = "";
+    
+    // 날짜 조건
+    private String dateType = "pblancDt";
+    private String startDate = "";
+    private String endDate = "";
+    
+    // 정렬 조건
+    private String sortField = "";
+    private String sortDirection = "desc";
+    
+    // 페이징
+    private int currentPage = 1;
+    private int size = 10;
+    
+    // map으로 반환
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("currentPage", this.currentPage);
+        map.put("keyword", this.keyword);
+        map.put("bidSttus", this.bidSttus);
+        map.put("scsbMth", this.scsbMth);
+        map.put("cdltPresentnAt", this.cdltPresentnAt);
+        map.put("acmsltproofPresentnAt", this.acmsltproofPresentnAt);
+        map.put("dateType", this.dateType);
+        map.put("startDate", this.startDate);
+        map.put("endDate", this.endDate);
+        map.put("sortField", this.sortField);
+        map.put("sortDirection", this.sortDirection);
+        map.put("size", this.size);
+        return map;
+    }
+
+}

@@ -28,6 +28,7 @@ import kr.or.ddit.util.DownloadService;
 import kr.or.ddit.util.UploadController;
 import kr.or.ddit.vo.BdderVO;
 import kr.or.ddit.vo.BidPblancVO;
+import kr.or.ddit.vo.BidSearchVO;
 import kr.or.ddit.vo.CcpyManageVO;
 import kr.or.ddit.vo.FileDetailVO;
 import lombok.extern.slf4j.Slf4j;
@@ -70,56 +71,44 @@ public class BidPblancController {
 	}
 
 	@GetMapping("/getBidPblancList")
-	public String getBidPblancList(Model model, @RequestParam(required = false, defaultValue = "") String keyword,
-			@RequestParam(required = false, defaultValue = "1") int currentPage,
-			@RequestParam(required = false, defaultValue = "") String bidSttus,
-			@RequestParam(required = false, defaultValue = "") String scsbMth,
-			@RequestParam(required = false, defaultValue = "") String cdltPresentnAt,
-			@RequestParam(required = false, defaultValue = "") String acmsltproofPresentnAt,
-			@RequestParam(required = false, defaultValue = "pblancDt") String dateType,
-			@RequestParam(required = false, defaultValue = "") String startDate,
-			@RequestParam(required = false, defaultValue = "") String endDate,
-			@RequestParam(required = false, defaultValue = "") String sortField,
-		    @RequestParam(required = false, defaultValue = "desc") String sortDirection,
+	public String getBidPblancList(
+			Model model,
+			BidSearchVO searchVO, // 쿼리스트링 검색 조건
 			@AuthenticationPrincipal CustomUser customUser
-			) {
-		int size = 10;
-
-		Map<String, Object> map = new HashMap<>();
-		map.put("currentPage", currentPage);
-		map.put("keyword", keyword);
-		map.put("bidSttus", bidSttus);
-		map.put("scsbMth", scsbMth);
-		map.put("cdltPresentnAt", cdltPresentnAt);
-		map.put("acmsltproofPresentnAt", acmsltproofPresentnAt);
-		map.put("dateType", dateType);
-		map.put("startDate", startDate);
-		map.put("endDate", endDate);
-		map.put("sortField", sortField);
-	    map.put("sortDirection", sortDirection);
-
+			) {	
+		Map<String, Object> map = searchVO.toMap();
 		int total = this.bidPblancService.getTotal(map);
 
 		List<BidPblancVO> bidPblancVOList = this.bidPblancService.getBidPblancList(map);
-
-		ArticlePage<BidPblancVO> articlePage = new ArticlePage<BidPblancVO>(total, currentPage, size, bidPblancVOList,
-				map);
-
-		if (customUser != null) {
-			if (customUser.getCcpyManageVO() != null) { // 직원이 로그인한 경우 문제 발생! 통합시 제거 예정
-				CcpyManageVO ccpyManageVO = customUser.getCcpyManageVO();
-				for (BidPblancVO bidPblancVO : articlePage.getContent()) {
-					BdderVO existingBid = this.bdderService.getExistingBid(ccpyManageVO.getCcpyManageId(),
-							bidPblancVO.getBidPblancSn());
-					if (existingBid != null) {
-						bidPblancVO.setHasAlreadyBid(true);
-					}
-				}
-			}
-		}
-		model.addAttribute("articlePage", articlePage);
-
+		
+		ArticlePage<BidPblancVO> articlePage = new ArticlePage<BidPblancVO>(
+				total, searchVO.getCurrentPage(), searchVO.getSize(), bidPblancVOList, map);
+		
+		markAlreadyBid(articlePage, customUser);
+		
+	    model.addAttribute("articlePage", articlePage);
 		return "bidPblanc/getBidPblancList";
+	}
+	
+	private void markAlreadyBid(
+			ArticlePage<BidPblancVO> articlePage, 
+			CustomUser customUser
+			) {
+	    if (customUser == null || customUser.getCcpyManageVO() == null) {
+	        return;
+	    }
+	    
+	    int ccpyManageId = customUser.getCcpyManageVO().getCcpyManageId();
+	    
+	    articlePage.getContent().forEach(bidPblancVO -> {
+	        BdderVO existingBid = this.bdderService.getExistingBid(
+	            ccpyManageId, 
+	            bidPblancVO.getBidPblancSn()
+	        );
+	        if (existingBid != null) {
+	            bidPblancVO.setHasAlreadyBid(true);
+	        }
+	    });
 	}
 
 	@GetMapping("/getBidPblancAsEmp")
@@ -212,19 +201,25 @@ public class BidPblancController {
 	}
 
 	@GetMapping("/download")
-	public ResponseEntity<Resource> downloadFile(@RequestParam("fileGroupSn") long fileGroupSn,
-			@RequestParam("fileNo") int fileNo) throws IOException {
+	public ResponseEntity<Resource> downloadFile(
+			@RequestParam("fileGroupSn") long fileGroupSn,
+			@RequestParam("fileNo") int fileNo
+			) {
 		return downloadService.downloadFile(fileGroupSn, fileNo);
 	}
 
 	@PostMapping("/downloadSelected")
-	public ResponseEntity<Resource> downloadSelected(@RequestParam("fileGroupSn") List<Long> fileGroupSnList,
-			@RequestParam("fileNo") List<Integer> fileNoList) throws IOException {
+	public ResponseEntity<Resource> downloadSelected(
+			@RequestParam("fileGroupSn") List<Long> fileGroupSnList,
+			@RequestParam("fileNo") List<Integer> fileNoList
+			) {
 		return downloadService.downloadSelected(fileGroupSnList, fileNoList);
 	}
 
 	@GetMapping("/downloadAll")
-	public ResponseEntity<Resource> downloadAll(@RequestParam("fileGroupSn") long fileGroupSn) throws IOException {
+	public ResponseEntity<Resource> downloadAll(
+			@RequestParam("fileGroupSn") long fileGroupSn
+			) {
 		return downloadService.downloadAll(fileGroupSn);
 	}
 

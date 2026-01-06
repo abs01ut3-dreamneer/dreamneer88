@@ -248,7 +248,7 @@ public class MtinspServiceImpl implements MtinspService {
 
 			// 기본 정보 매핑
 			point.setHshldId(mtinsp.getHshldId());
-			point.setIemNm(mtinsp.getIemNm());
+			point.setItemNm(mtinsp.getIemNm());
 			point.setUsgqty(mtinsp.getUsgqty());
 
 			dataPoints.add(point);
@@ -284,7 +284,7 @@ public class MtinspServiceImpl implements MtinspService {
 			Map<String, Map<String, List<MovingAvgStdPoint>>> groupedHistoricalData = allHistoricalData.stream()
 					.collect(
 							Collectors.groupingBy(MovingAvgStdPoint::getHshldId,
-									Collectors.groupingBy(MovingAvgStdPoint::getIemNm)
+									Collectors.groupingBy(MovingAvgStdPoint::getItemNm)
 							)
 					);
 
@@ -292,7 +292,7 @@ public class MtinspServiceImpl implements MtinspService {
 			Map<String, Map<String, List<MovingAvgStdPoint>>> groupedYesterdayData = yesterdayDataPoints.stream()
 					.collect(
 							Collectors.groupingBy(MovingAvgStdPoint::getHshldId,
-									Collectors.groupingBy(MovingAvgStdPoint::getIemNm)
+									Collectors.groupingBy(MovingAvgStdPoint::getItemNm)
 							)
 					);
 

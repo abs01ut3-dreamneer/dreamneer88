@@ -41,28 +41,5 @@ public class EmailController {
         resultMap.put("message", result ? "발송 이메일에 등록 완료, 수 분 내 발송" : "❌ 이메일 등록 실패");
         return resultMap;
 	}
-
-	/**
-	 * 테스트: 간단한 이메일 발송 POST /api/email/test/simple
-	 */
-	@PostMapping("/test/simple")
-	public Map<String, Object> sendSimpleEmail(@RequestParam String email, @RequestParam String subject,
-			@RequestParam String body) {
-
-		Map<String, Object> resultMap = new HashMap<>();
-
-		try {
-			boolean result = emailService.sendSimpleEmail(email, subject, body);
-
-			resultMap.put("success", result);
-			resultMap.put("message", result ? "✅ 이메일 발송 완료" : "❌ 발송 실패");
-			resultMap.put("email", email);
-
-		} catch (Exception e) {
-			resultMap.put("success", false);
-			resultMap.put("message", "❌ 에러: " + e.getMessage());
-		}
-
-		return resultMap;
-	}
+	
 }

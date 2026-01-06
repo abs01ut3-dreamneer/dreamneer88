@@ -540,8 +540,6 @@
 								})
 								.then(data => {
 									setTimeout(() => {
-
-
 										loadingModal.hide();
 										console.log("check : data.ccpyManageVO =>", data.ccpyManageVO);
 

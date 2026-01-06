@@ -294,7 +294,7 @@
                 document.getElementById('cdltPresentnAt').checked = false;
                 document.getElementById('acmsltproofPresentnAt').checked = false;
 
-                // 날짜 선택기 초기화
+                // 날짜 선택시 초기화
                 document.getElementById('daterange-btn').innerHTML =
                   '<i class="far fa-calendar-alt"></i> 기간선택 <i class="fas fa-caret-down"></i>';
                 document.getElementById('startDate').value = '';
@@ -335,7 +335,6 @@
                 if (keyword) {
                   document.getElementById('keyword').value = keyword;
                 }
-
 
                 // 낙찰방법 복원
                 const scsbMth = urlParams.get('scsbMth');
@@ -428,7 +427,7 @@
               // 페이지 로드 시 페이징 링크 업데이트
               updatePaginationLinks();
 
-              // ========== 유틸리티 함수: 쿼리 스트링 생성 ==========
+              // ========== 쿼리 스트링 생성 함수 ==========
               function createQueryString(params) {
                 const queryParts = [];
 
@@ -742,7 +741,7 @@
                               </c:if>
                             </c:otherwise>
                           </c:choose>
-                          <span class="ml-2">${bidPblancVO.bidSj}</span>
+                          <span class="ml-2">${fn:length(bidPblancVO.bidSj) > 20 ? fn:substring(bidPblancVO.bidSj, 0, 20).concat('...') : bidPblancVO.bidSj}</span>
                         </td>
                         <td class="align-middle">${bidPblancVO.scsbMthAsStr}</td>
                         <td class="align-middle">

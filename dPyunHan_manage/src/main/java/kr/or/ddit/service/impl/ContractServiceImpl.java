@@ -98,7 +98,7 @@ public class ContractServiceImpl implements ContractService {
         log.info("-> 2. 서명 토큰 및 DB 저장 완료: {}", secureToken);
 
         // 5. "보안 서명 URL" 생성
-        String serverDomain = "http://localhost:8020"; // ⚠️ 실제 서버 도메인으로 변경해야 합니다.
+        String serverDomain = "http://192.168.141.46:8020"; // ⚠️ 실제 서버 도메인으로 변경해야 합니다.
         String signingUrl = String.format("%s/sign/document?token=%s", serverDomain, secureToken);
 
         // ----------------------------------------------------

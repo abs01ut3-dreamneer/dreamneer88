@@ -12,7 +12,7 @@ public class MovingAvgStdPoint {
 	@JsonFormat(pattern = "yyyy/MM/dd")
 	private LocalDate date;
     private String hshldId;
-    private String iemNm;
+    private String itemNm;
 	private double usgqty;
 	
 	private boolean isAnomaly=false;

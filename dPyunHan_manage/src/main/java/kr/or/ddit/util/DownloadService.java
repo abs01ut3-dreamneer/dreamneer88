@@ -1,7 +1,6 @@
 package kr.or.ddit.util;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -30,158 +29,230 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class DownloadService {
+    // ========== 상수 정의 ==========
+    private static final String CHARSET = "UTF-8";
+    private static final String ZIP_CONTENT_TYPE = "application/zip";
+    private static final String ZIP_FILENAME = "files.zip";
 
-	@Autowired
-	private UploadController uploadController;
+    @Autowired
+    private UploadController uploadController;
 
-	public ResponseEntity<Resource> downloadFile(long fileGroupSn, int fileNo) throws IOException {
-		FileDetailVO fileDetailVO = uploadController.getFileDetail(fileGroupSn, fileNo);
+    // 파일 정보 가져오기
+    private FileDetailVO getFileOrThrow(long fileGroupSn, int fileNo) {
+        FileDetailVO fileDetailVO = uploadController.getFileDetail(fileGroupSn, fileNo);
+        if (fileDetailVO == null) {
+            throw new IllegalArgumentException("파일을 찾을 수 없습니다: " + fileGroupSn + "/" + fileNo);
+        }
+        return fileDetailVO;
+    }
+    
+    //파일명 URL 인코딩
+    private String encodeFileName(String fileName) {
+        try {
+            return URLEncoder.encode(fileName, CHARSET).replaceAll("\\+", "%20");
+        } catch (Exception e) {
+            log.error("파일명 인코딩 실패", e);
+            return "download";
+        }
+    }
 
-		if (fileDetailVO == null) {
-			throw new IllegalArgumentException("파일을 찾을 수 없습니다.");
-		}
+    // 다운로드 응답 헤더 설정
+    private ResponseEntity.BodyBuilder setDownloadHeaders(String fileName, String contentType) {
+        String encodedFileName = encodeFileName(fileName);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, 
+                    "attachment; filename*=" + CHARSET + "''" + encodedFileName)
+                .header(HttpHeaders.CONTENT_TYPE, contentType);
+    }
 
-		return createFileResponse(fileDetailVO);
-	}
+    // 단일 파일 다운로드
+    public ResponseEntity<Resource> downloadFile(long fileGroupSn, int fileNo) {
+        try {
+            FileDetailVO fileDetailVO = getFileOrThrow(fileGroupSn, fileNo);
+            return createFileResponse(fileDetailVO);
+            
+        } catch (IllegalArgumentException e) {
+            log.error("파일 정보 없음", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            
+        } catch (FileNotFoundException e) {
+            log.error("파일 없음: {}/{}", fileGroupSn, fileNo, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            
+        } catch (IOException e) {
+            log.error("파일 I/O 오류: {}/{}", fileGroupSn, fileNo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            
+        } catch (Exception e) {
+            log.error("예상치 못한 오류", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    // 선택된 파일 다운로드
+    public ResponseEntity<Resource> downloadSelected(List<Long> fileGroupSnList, List<Integer> fileNoList) {
+        try {
+            // 입력값 검증
+            if (fileGroupSnList == null || fileGroupSnList.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
 
-	
-	public ResponseEntity<Resource> downloadSelected(List<Long> fileGroupSnList, List<Integer> fileNoList)
-			throws IOException {
+            // 파일 1개 선택
+            if (fileGroupSnList.size() == 1 && fileNoList.size() == 1) {
+                return downloadFile(fileGroupSnList.get(0), fileNoList.get(0));
+            }
 
-		// 파일 1개 선택
-		if (fileGroupSnList.size() == 1 && fileNoList.size() == 1) {
-			long fileGroupSn = fileGroupSnList.get(0);
-			int fileNo = fileNoList.get(0);
-			return downloadFile(fileGroupSn, fileNo);
-		}
+            // 여러 파일: ZIP으로 압축
+            return downloadFilesAsZip(fileGroupSnList, fileNoList);
+            
+        } catch (Exception e) {
+            log.error("선택 다운로드 오류", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    // 전체 파일 다운로드
+    public ResponseEntity<Resource> downloadAll(long fileGroupSn) {
+        try {
+            List<FileDetailVO> fileDetailVOList = uploadController.getFileDetailVOList(fileGroupSn);
 
-		return downloadFilesAsZip(fileGroupSnList, fileNoList);
-	}
+            if (fileDetailVOList == null || fileDetailVOList.isEmpty()) {
+                log.warn("다운로드할 파일 없음: {}", fileGroupSn);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
 
-	public ResponseEntity<Resource> downloadAll(long fileGroupSn) throws IOException {
-		List<FileDetailVO> fileDetailVOList = uploadController.getFileDetailVOList(fileGroupSn);
+            // 파일이 1개만 있으면 단일 파일로 다운로드
+            if (fileDetailVOList.size() == 1) {
+                return createFileResponse(fileDetailVOList.get(0));
+            }
 
-		if (fileDetailVOList == null || fileDetailVOList.isEmpty()) {
-			throw new IllegalArgumentException("파일을 찾을 수 없습니다.");
-		}
+            // 다중 파일은 ZIP으로 압축
+            List<Long> fileGroupSnList = new ArrayList<>();
+            List<Integer> fileNoList = new ArrayList<>();
 
-		// 파일이 1개만 있으면 단일 파일로 다운로드
-		if (fileDetailVOList.size() == 1) {
-			return createFileResponse(fileDetailVOList.get(0));
-		}
+            for (FileDetailVO file : fileDetailVOList) {
+                fileGroupSnList.add(fileGroupSn);
+                fileNoList.add(file.getFileNo());
+            }
 
-		// 다중 파일은 ZIP으로 압축
-		List<Long> fileGroupSnList = new ArrayList<>();
-		List<Integer> fileNoList = new ArrayList<>();
+            return downloadFilesAsZip(fileGroupSnList, fileNoList);
+            
+        } catch (Exception e) {
+            log.error("전체 다운로드 오류", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
-		for (FileDetailVO file : fileDetailVOList) {
-			fileGroupSnList.add(fileGroupSn);
-			fileNoList.add(file.getFileNo());
-		}
 
-		return downloadFilesAsZip(fileGroupSnList, fileNoList);
-	}
+    // 파일 미리보기 
+    public ResponseEntity<?> previewFile(long fileGroupSn, int fileNo) {
+        try {
+            FileDetailVO fileDetailVO = getFileOrThrow(fileGroupSn, fileNo);
 
-	
-	private ResponseEntity<Resource> downloadFilesAsZip(List<Long> fileGroupSnList, List<Integer> fileNoList)
-			throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		ZipOutputStream zos = new ZipOutputStream(baos);
+            Path filePath = Paths.get(fileDetailVO.getFileAbsltStrelc());
+            if (!Files.exists(filePath)) {
+                log.warn("파일 없음: {}", filePath);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+            
+            try (FileInputStream fis = new FileInputStream(filePath.toFile())) {
+                byte[] fileContent = fis.readAllBytes();
 
-		try {
-			for (int i = 0; i < fileGroupSnList.size(); i++) {
-				FileDetailVO fileDetailVO = uploadController.getFileDetail(fileGroupSnList.get(i),
-						fileNoList.get(i));
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .header(HttpHeaders.CONTENT_DISPOSITION,
+                                "inline; filename=\"" + fileDetailVO.getFileOrginlNm() + "\"")
+                        .body(new ByteArrayResource(fileContent));
+            }
 
-				if (fileDetailVO == null) {
-					continue;
-				}
+        } catch (IllegalArgumentException e) {
+            log.error("파일 정보 없음", e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            
+        } catch (FileNotFoundException e) {
+            log.error("파일을 찾을 수 없습니다: {}/{}", fileGroupSn, fileNo, e);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            
+        } catch (IOException e) {
+            log.error("파일 처리 오류: {}/{}", fileGroupSn, fileNo, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            
+        } catch (Exception e) {
+            log.error("예상치 못한 오류", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
-				Path filePath = Paths.get(fileDetailVO.getFileAbsltStrelc());
+   
+    //  ZIP 파일로 압축해서 다운로드
+    private ResponseEntity<Resource> downloadFilesAsZip(List<Long> fileGroupSnList, List<Integer> fileNoList) {
+        try {
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-				if (!Files.exists(filePath)) {
-					log.warn("파일이 존재하지 않습니다: {}", filePath);
-					continue;
-				}
+            try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+                for (int i = 0; i < fileGroupSnList.size(); i++) {
+                    try {
+                        addFileToZip(zos, fileGroupSnList.get(i), fileNoList.get(i));
+                    } catch (Exception e) {
+                        log.warn("ZIP 엔트리 추가 실패: {}/{}", fileGroupSnList.get(i), fileNoList.get(i), e);
+                    }
+                }
+            } 
 
-				ZipEntry zipEntry = new ZipEntry(fileDetailVO.getFileOrginlNm());
-				zos.putNextEntry(zipEntry);
-				Files.copy(filePath, zos);
-				zos.closeEntry();
-			}
-		} finally {
-			zos.close();
-		}
+            if (baos.size() == 0) {
+                log.warn("압축된 파일 없음");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
 
-		ByteArrayResource resource = new ByteArrayResource(baos.toByteArray());
-		String zipFileName = URLEncoder.encode("files.zip", "UTF-8").replaceAll("\\+", "%20");
+            ByteArrayResource resource = new ByteArrayResource(baos.toByteArray());
+            return setDownloadHeaders(ZIP_FILENAME, ZIP_CONTENT_TYPE)
+                    .contentLength(baos.size())
+                    .body(resource);
+                    
+        } catch (IOException e) {
+            log.error("ZIP 생성 오류", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
-		return ResponseEntity.ok()
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + zipFileName)
-				.header(HttpHeaders.CONTENT_TYPE, "application/zip").contentLength(baos.size()).body(resource);
-	}
+    // ZIP에 파일 엔트리 추가
+    private void addFileToZip(ZipOutputStream zos, long fileGroupSn, int fileNo) throws IOException {
+        FileDetailVO fileDetailVO = uploadController.getFileDetail(fileGroupSn, fileNo);
+        if (fileDetailVO == null) {
+            log.debug("파일 정보 없음: {}/{}", fileGroupSn, fileNo);
+            return;
+        }
 
-	
-	private ResponseEntity<Resource> createFileResponse(FileDetailVO fileDetailVO) throws IOException {
-		Path filePath = Paths.get(fileDetailVO.getFileAbsltStrelc());
-		log.info("check : filePath => {}", filePath);
+        Path filePath = Paths.get(fileDetailVO.getFileAbsltStrelc());
+        if (!Files.exists(filePath)) {
+            log.warn("파일 없음: {}", filePath);
+            return;
+        }
 
-		Resource resource = new FileSystemResource(filePath);
+        try {
+            ZipEntry zipEntry = new ZipEntry(fileDetailVO.getFileOrginlNm());
+            zos.putNextEntry(zipEntry);
+            Files.copy(filePath, zos);
+            zos.closeEntry();
+            log.debug("ZIP 엔트리 추가 성공: {}", fileDetailVO.getFileOrginlNm());
+        } catch (IOException e) {
+            log.error("ZIP 엔트리 추가 실패: {}", fileDetailVO.getFileOrginlNm(), e);
+            throw e;
+        }
+    }
 
-		if (!resource.exists()) {
-			throw new IllegalArgumentException("파일이 존재하지 않습니다.");
-		}
+    // 단일 파일 응답 생성
+    private ResponseEntity<Resource> createFileResponse(FileDetailVO fileDetailVO) throws IOException {
+        Path filePath = Paths.get(fileDetailVO.getFileAbsltStrelc());
 
-		String originalFileName = fileDetailVO.getFileOrginlNm();
-		String encodedFileName = URLEncoder.encode(originalFileName, "UTF-8").replaceAll("\\+", "%20");
+        // 파일 존재 확인
+        if (!Files.exists(filePath)) {
+            throw new FileNotFoundException("파일 없음: " + filePath);
+        }
 
-		return ResponseEntity.ok()
-				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + encodedFileName)
-				.header(HttpHeaders.CONTENT_TYPE, fileDetailVO.getFileMime()).body(resource);
-	}
-	
-	public ResponseEntity<?> previewFile(long fileGroupSn, int fileNo) {
-		try {
-			FileDetailVO fileDetailVO = uploadController.getFileDetail(fileGroupSn, fileNo);
-			log.info("check : previewFile / fileDetailVO => {}", fileDetailVO);
+        Resource resource = new FileSystemResource(filePath);
 
-			if (fileDetailVO == null) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body("파일을 찾을 수 없습니다.");
-			}
-
-			String filePath = fileDetailVO.getFileAbsltStrelc();
-			File file = new File(filePath);
-
-			log.info("File Path 값: {}", fileDetailVO.getFileStrelc());
-			log.info("실제 파일 존재 여부: {}", file.exists());
-
-			if (!file.exists()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND)
-						.body("파일 경로가 존재하지 않습니다.");
-			}
-
-			// 파일 읽기
-			FileInputStream fis = new FileInputStream(file);
-			byte[] fileContent = fis.readAllBytes();
-			fis.close();
-
-			// inline으로 미리보기 (attachment와 다름)
-			return ResponseEntity.ok()
-					.contentType(MediaType.APPLICATION_PDF)
-					.header(HttpHeaders.CONTENT_DISPOSITION,
-							"inline; filename=\"" + fileDetailVO.getFileOrginlNm() + "\"")
-					.body(new ByteArrayResource(fileContent));
-
-		} catch (FileNotFoundException e) {
-			log.error("파일을 찾을 수 없습니다.", e);
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-		} catch (IOException e) {
-			log.error("파일 읽기 오류", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		} catch (Exception e) {
-			log.error("예상치 못한 오류", e);
-			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-		}
-	}
+        return setDownloadHeaders(fileDetailVO.getFileOrginlNm(), fileDetailVO.getFileMime())
+                .body(resource);
+    }
 }

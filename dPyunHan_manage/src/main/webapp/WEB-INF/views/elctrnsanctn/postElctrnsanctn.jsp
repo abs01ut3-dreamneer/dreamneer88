@@ -141,6 +141,13 @@
 							//ck에디터
 
 							// 문서양식 선택
+							document.querySelectorAll(".drftDocVORow").forEach(row => {
+								row.addEventListener("click", function () {
+									const drftDocId = this.querySelector("#drftDocId").value;
+									getDrftDocFormat(drftDocId);
+								});
+							});
+
 							// axios 문서 내용 가져오기
 							async function getDrftDocFormat(drftDocId) {
 								try {
@@ -149,9 +156,13 @@
 											"drftDocId": drftDocId
 										}
 									});
-									document.querySelector("#drftDocTitle").innerHTML = response.data.drftDocVO.elctrnsanctnManageVO.sanctnSecode + '<span class="ml-2 mr-2 fs-4">|</span>' + response.data.drftDocVO.drftDocNm;
-									document.querySelector("#drftDocId").value = response.data.drftDocVO.drftDocId;
-									document.querySelector("#elctrnsanctnManageId").value = response.data.drftDocVO.elctrnsanctnManageId;
+
+									document.querySelector("#drftDocTitle").innerHTML =
+										response.data.drftDocVO.elctrnsanctnManageVO.sanctnSecode + '<span class="ml-2 mr-2 fs-4">|</span>' + response.data.drftDocVO.drftDocNm;
+									document.querySelector("#drftDocId").value =
+										response.data.drftDocVO.drftDocId;
+									document.querySelector("#elctrnsanctnManageId").value =
+										response.data.drftDocVO.elctrnsanctnManageId;
 									let htmlContent = response.data.drftDocVO.drftDocFormat;
 
 									if (response.data.empVO) {
@@ -180,18 +191,11 @@
 								}
 							}
 
-							document.querySelectorAll(".drftDocVORow").forEach(row => {
-								row.addEventListener("click", function () {
-									const drftDocId = this.querySelector("#drftDocId").value;
-									getDrftDocFormat(drftDocId);
-								});
-							});
-
 							document.querySelector("#drftDocChange").addEventListener("click", function () {
 								modal.show();
 							})
 
-							// 문서양식 선택
+							// 문서양식 선택 끝
 
 							//=== 결재선 설정 모달
 							document.querySelectorAll('label[for^="dept_"]').forEach(label => {
@@ -235,7 +239,7 @@
 								const wrapper = document.querySelector(wrapperId);
 								const checkedEmps = document.querySelectorAll('.emp-check:checked');
 								const checkedDepts = document.querySelectorAll('.dept-check:checked');
-
+								
 								if (checkedEmps.length === 0) {
 									Swal.fire({
 										icon: 'warning',
@@ -247,30 +251,35 @@
 									});
 									return;
 								}
-
+								
 								wrapper.innerHTML = '';
-
 								let orderNum = 1;
 
 								checkedEmps.forEach(empCheck => {
 									const empId = empCheck.getAttribute('data-emp');
 									const deptInfo = empCheck.getAttribute("data-dept");
-									// 라벨 찾기
 									const empLabel = document.querySelector(`label[for="emp_\${empId}"]`);
-									const empName = empLabel ? empLabel.textContent : empId; // 라벨 못 찾으면 ID 사용
+									let empName = '';
+									let clsfName = '';
+									
+									if (empLabel) {										
+										const parts = empLabel.textContent.trim().split(/\s+/);
+										clsfName = parts[1] || '';
+										empName = parts[0] || '';
+									}
 
 									const div = document.createElement('div');
 									div.setAttribute('class', 'badge badge-lg badge-light p-1')
 									div.setAttribute('data-emp', empId);
+									div.setAttribute('data-emp-name', empName);
+									div.setAttribute('data-emp-clsf', clsfName);
 									div.setAttribute('data-dept', deptInfo);
 									div.setAttribute('data-type', type);
 									div.setAttribute('data-order', type === 'sanctn' ? orderNum : '');
 
-									div.innerHTML = `
-														<span class="badge badge-warning badge-sm mr-1 order-badge">\${type==='sanctn' ? orderNum : ''}</span>
-														<span style="font-size: 0.9rem">\${empName}</span>
-														 <a class="badge badge-danger badge-sm ml-1 sanctnlnDelBtn" style="font-weight: bold; cursor:pointer;">X</a>
-													`;
+									div.innerHTML = `<span class="badge badge-warning badge-sm mr-1 order-badge">\${type==='sanctn' ? orderNum : ''}</span>
+													<span style="font-size: 0.9rem">\${empName} \${clsfName}</span>
+													<a class="badge badge-danger badge-sm ml-1 sanctnlnDelBtn" style="font-weight: bold; cursor:pointer;">X</a>`;
 
 									div.querySelectorAll(".sanctnlnDelBtn").forEach(btn => {
 										btn.addEventListener("click", function () {
@@ -280,7 +289,6 @@
 									})
 
 									wrapper.appendChild(div);
-
 									if (type === 'sanctn') orderNum++;
 								});
 
@@ -343,7 +351,7 @@
 								}
 							}
 
-							// 참조자 Badge 추가 (NEW)
+							// 참조자 Badge 추가
 							function addReferenceBadge(empInfo, container) {
 								const span = document.createElement('span');
 								span.className = 'badge badge-lg badge-light p-2 mr-2 drftRefrnEmp';
@@ -377,23 +385,12 @@
 							}
 
 							function parseEmpInfo(div) {
-								const empId = div.getAttribute('data-emp');
-								const deptInfo = div.getAttribute("data-dept");
-								const textContent = div.textContent;
-
-								let cleanText = textContent.replace(/^\d+/, '').replace('X', '').trim();
-
-								const empLabel = document.querySelector(`label[for="emp_\${empId}"]`);
-								let empName = '';
-								let clsfName = '';
-								if (empLabel) {
-									const fullText = empLabel.textContent.trim();
-									const parts = fullText.split(/\s+/);
-									clsfName = parts[1] || '';
-									empName = parts[0] || '';
-								}
-
-								return { empId, empName, clsfName, deptInfo };
+								return {
+									empId: div.getAttribute('data-emp'),
+									empName: div.getAttribute('data-emp-name'),  
+									clsfName: div.getAttribute('data-emp-clsf'), 
+									deptInfo: div.getAttribute('data-dept')
+								};
 							}
 
 							// 결재자 행 추가
@@ -543,14 +540,16 @@
 									cancelButtonText: '취소',
 									confirmButtonColor: '#d33',
 									cancelButtonColor: '#3085d6'
-								}).then((result) => {
+								})
+								.then((result) => {
 									if (result.isConfirmed) {
 										Swal.fire({
 											icon: 'success',
 											title: '상신 완료',
 											text: '전자결재가 상신되었습니다.',
 											confirmButtonText: '확인'
-										}).then(() => {
+										})
+										.then(() => {
 											if (CKEDITOR.instances.drftCn) {
 												const now = new Date();
 												const today = now.getFullYear() + '-' +
@@ -558,7 +557,6 @@
 													String(now.getDate()).padStart(2, '0');
 												const editorDoc = CKEDITOR.instances.drftCn.document;
 												const dateElem = editorDoc.getById('elctrnsanctnDrftDt');
-
 												if (dateElem) {
 													dateElem.setHtml(today);
 												} else {
@@ -853,8 +851,8 @@
 							<form id="drftForm" method="post" enctype="multipart/form-data">
 								<div style="display: none;">
 									<c:if test="${not empty fileGroupSn}">
-									<input type="hidden" id="fileGroupSn" name="fileGroupSn"
-										   value="${fileGroupSn}" />
+										<input type="hidden" id="fileGroupSn" name="fileGroupSn"
+											value="${fileGroupSn}" />
 									</c:if>
 								</div>
 								<div class="card-body">
@@ -933,7 +931,8 @@
 															<div class="file-drop-zone" id="fileDropZone"
 																ondragover="fover(event)" ondragleave="fleave(event)"
 																ondrop="fdrop(event)" title="파일을 여기에 드래그하거나 클릭하세요">
-																<div class="drop-placeholder" style="<c:if test="${not empty fileDetailVOList}">display: none;</c:if>">
+																<div class="drop-placeholder" style="<c:if test=" ${not
+																	empty fileDetailVOList}">display: none;</c:if>">
 																	<i
 																		class="fas fa-cloud-upload-alt text-muted mb-2"></i>
 																	<p class="text-muted mb-0"
@@ -943,16 +942,20 @@
 																<div class="file-list-inside" id="fileList">
 																	<c:forEach var="file" items="${fileDetailVOList}">
 																		<div class="file-item d-flex align-items-center p-2 border-bottom"
-																			 data-filenosn="${file.fileNo}"
-																			 data-groupsn="${file.fileGroupSn}"
-																			 data-status="committed">
-																			<i class="fas fa-file-alt text-primary me-2"></i>
-																			<span class="file-name text-truncate flex-grow-1 text-center" title="${file.fileOrginlNm}">
-																			 ${file.fileOrginlNm}
+																			data-filenosn="${file.fileNo}"
+																			data-groupsn="${file.fileGroupSn}"
+																			data-status="committed">
+																			<i
+																				class="fas fa-file-alt text-primary me-2"></i>
+																			<span
+																				class="file-name text-truncate flex-grow-1 text-center"
+																				title="${file.fileOrginlNm}">
+																				${file.fileOrginlNm}
 
-																		 </span>
-																		<button type="button" class="btn btn-sm btn-outline-danger ms-2 remove-file-btn"
-																					onclick="removeExistingFile(this)">
+																			</span>
+																			<button type="button"
+																				class="btn btn-sm btn-outline-danger ms-2 remove-file-btn"
+																				onclick="removeExistingFile(this)">
 																				<i class="fas fa-trash-alt"></i>
 																			</button>
 																		</div>

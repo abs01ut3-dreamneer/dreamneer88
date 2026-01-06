@@ -64,47 +64,28 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 
 	@Transactional
 	@Override
-	public int postElctrnsanctn(ElctrnsanctnVO elctrnsanctnVO, MultipartFile[] inputFiles) {
-		// 1. VO에 담겨 온 파일 그룹 SN (PDF 생성 시 넘어온 ID, 또는 0)
+	public int postElctrnsanctn(ElctrnsanctnVO elctrnsanctnVO, MultipartFile[] inputFiles) {		
 		long finalFileGroupSn = elctrnsanctnVO.getFileGroupSn();
 
-		// --- A. 파일 그룹 SN이 0일 경우에만 파일 처리/그룹 생성 ---
 		if (finalFileGroupSn == 0) {
-
 			if (inputFiles != null && inputFiles.length > 0) {
-				// Case 1: 새로운 파일(PDF 없음)이 업로드된 경우. 새 그룹 생성 및 파일 저장.
 				finalFileGroupSn = this.uploadService.multiImageUpload(inputFiles);
 			}
-			// Case 2: 새 파일도 없는 경우 (ID는 0으로 유지됨).
 		}
-		// 🚨 파일 그룹 SN이 0보다 큰 경우(PDF 존재), 이 블록을 건너뛰고 finalFileGroupSn 값을 유지합니다. 🚨
-
-
-		// --- B. 재상신/복사 로직 처리 (파일 활동이 전혀 없었을 때만) ---
-		// finalFileGroupSn이 0인 상태에서만 상위 문서를 참조합니다.
+		
 		if (finalFileGroupSn == 0 && elctrnsanctnVO.getUpperElctrnsanctnId() != 0) {
-
-			// Case 3: PDF도 없고, 새 파일도 없지만, 기존 문서 복사본으로 제출하는 경우.
 			ElctrnsanctnVO upperElctrnsanctnVO = new ElctrnsanctnVO();
 			upperElctrnsanctnVO.setElctrnsanctnSn(elctrnsanctnVO.getUpperElctrnsanctnId());
-
-			// 상위 문서의 FileGroupSn을 재사용합니다.
 			finalFileGroupSn = this.elctrncsanctnMapper.getElctrnsanctn(upperElctrnsanctnVO).getFileGroupSn();
 		}
 
-		// --- C. 최종 검증 및 DB 커밋 ---
-
-		// 1. VO에 최종 그룹 ID 설정
 		elctrnsanctnVO.setFileGroupSn(finalFileGroupSn);
-
-		// 2. 🚨 VO에 Committed File List는 로컬 변수로만 처리 (필드 추가 없음) 🚨
+		
 		if (finalFileGroupSn > 0) {
-			// 이 로직은 파일 목록이 존재함을 확인하고 검증하는 용도로만 사용됩니다.
 			List<FileDetailVO> committedFiles = this.uploadService.getFileDetailVOList(finalFileGroupSn);
-			// (VO에 list를 set하는 코드는 삭제됨)
+			
 		}
-
-		// 3. 전자결재 문서 최종 DB INSERT/UPDATE
+		
 		return this.elctrncsanctnMapper.postElctrnsanctn(elctrnsanctnVO);
 	}
 
@@ -146,43 +127,56 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 	@Transactional
 	@Override
 	public int postSanctnlnDrftRefrn(String sanctnlnEmpList, String drftRefrnEmpList, ElctrnsanctnVO elctrnsanctnVO) {
-		int result = 0;
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			if (sanctnlnEmpList != null && !sanctnlnEmpList.isEmpty() && !sanctnlnEmpList.equals("[]")) {
-				List<SanctnlnVO> sanctnlnVOList = mapper.readValue(sanctnlnEmpList,
-						new TypeReference<List<SanctnlnVO>>() {
-						});
-				for (int i = 0; i < sanctnlnVOList.size(); i++) {
-					SanctnlnVO sanctnlnVO = sanctnlnVOList.get(i);
-					sanctnlnVO.setElctrnsanctnSn(elctrnsanctnVO.getElctrnsanctnSn());
-					if (sanctnlnVO.getSanctnOrdr() == sanctnlnVOList.size()) {
-						sanctnlnVO.setDcrbmanAt(1);
-					} else {
-						sanctnlnVO.setDcrbmanAt(0);
-					}
-					this.elctrncsanctnMapper.postSanctnln(sanctnlnVO);
-				}
-			}
-			if (drftRefrnEmpList != null && !drftRefrnEmpList.isEmpty() && !drftRefrnEmpList.equals("[]")) {
-				List<DrftRefrnVO> drftRefrnVOList = mapper.readValue(drftRefrnEmpList,
-						new TypeReference<List<DrftRefrnVO>>() {
-						});
-				for (DrftRefrnVO drftRefrnVO : drftRefrnVOList) {
-					drftRefrnVO.setElctrnsanctnSn(elctrnsanctnVO.getElctrnsanctnSn());
-					this.elctrncsanctnMapper.postDrftRefrn(drftRefrnVO);
-				}
-			}
-			result = 1;
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-			return 0;
-		} catch (Exception e) {
-			e.printStackTrace();
-			return 0;
-		}
-		return result;
+	    int result = 0;
+	    ObjectMapper mapper = new ObjectMapper();
+	    
+	    try {
+	        if (sanctnlnEmpList != null && !sanctnlnEmpList.isEmpty() && !sanctnlnEmpList.equals("[]")) {	            
+	            List<SanctnlnVO> sanctnlnVOList = mapper.readValue(
+	                sanctnlnEmpList,
+	                new TypeReference<List<SanctnlnVO>>() {}
+	            );      
+	            saveSanctnlnList(sanctnlnVOList, elctrnsanctnVO.getElctrnsanctnSn());
+	        }	        
+	        if (drftRefrnEmpList != null && !drftRefrnEmpList.isEmpty() && !drftRefrnEmpList.equals("[]")) {
+	            List<DrftRefrnVO> drftRefrnVOList = mapper.readValue(
+	                drftRefrnEmpList,
+	                new TypeReference<List<DrftRefrnVO>>() {}
+	            );
+	            saveDrftRefrnList(drftRefrnVOList, elctrnsanctnVO.getElctrnsanctnSn());
+	        }	        
+	        result = 1;	        
+	    } catch (JsonProcessingException e) {
+	        e.printStackTrace();
+	        return 0;
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	        return 0;
+	    }
+	    
+	    return result;
 	}
+
+	//결재선 저장
+	private void saveSanctnlnList(List<SanctnlnVO> sanctnlnVOList, int elctrnsanctnSn) {
+	    int totalCount = sanctnlnVOList.size();	    
+	    sanctnlnVOList.forEach(vo -> {
+	        vo.setElctrnsanctnSn(elctrnsanctnSn);
+	        vo.setDcrbmanAt(vo.getSanctnOrdr() == totalCount ? 1 : 0);
+	        this.elctrncsanctnMapper.postSanctnln(vo);
+	    });
+	}
+
+	// 참조자 저장
+	private void saveDrftRefrnList(List<DrftRefrnVO> drftRefrnVOList, int elctrnsanctnSn) {
+	    drftRefrnVOList.forEach(vo -> {
+	        vo.setElctrnsanctnSn(elctrnsanctnSn);
+	        this.elctrncsanctnMapper.postDrftRefrn(vo);
+	    });
+	}
+
+	
+	
 
 	// 페이지네이션
 	@Override

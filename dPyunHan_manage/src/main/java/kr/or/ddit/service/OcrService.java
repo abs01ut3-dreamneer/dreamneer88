@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.json.simple.JSONArray;
@@ -38,6 +39,32 @@ public class OcrService {
     @Value("${naver.ocr.domain-name}")
     private String domainName;
     
+    private interface FieldExtractor {
+        void extract(CcpyManageVO vo, String value);
+    }
+    
+    // 필드별 Extractor 맵
+    private final Map<String, FieldExtractor> fieldExtractors = Map.ofEntries(
+        Map.entry("ccpyBizrno", (vo, value) -> 
+            vo.setCcpyBizrno(extractNumber(value))),        
+        Map.entry("ccpyCmpnyNm", (vo, value) -> 
+        	vo.setCcpyCmpnyNm(extractKoreanOnly(extractAfterColon(value)))), 
+        Map.entry("ccpyRprsntvNm", (vo, value) -> 
+        	vo.setCcpyRprsntvNm(extractKoreanOnly(extractAfterColon(value)).replaceAll("\\s+", ""))), 
+        Map.entry("ccpyOpbizDe", (vo, value) -> {
+            try {
+                LocalDate parsedDate = parseLocalDate(value);
+                Date convertedDate = convertLocalDateToDate(parsedDate);
+                vo.setCcpyOpbizDe(convertedDate);
+            } catch (Exception e) {
+                log.warn("날짜 파싱 실패: {}", value);
+            }
+        }),        
+        Map.entry("ccpyAdres", (vo, value) -> 
+        	vo.setCcpyAdres(extractKoreanAndNumbers(extractAfterColon(value)).replaceAll("^\\s+", ""))) 
+    );
+    
+    // OCR 처리 메서드
     public JSONObject processBizLicenseOcr(String imagePath) throws Exception {
         
         if (!new File(imagePath).exists()) {
@@ -65,93 +92,76 @@ public class OcrService {
         return ocrResponse;
     }
     
+    // 메인 추출 메서드 
     public CcpyManageVO extractCcpyManageVO(JSONObject ocrResult) throws Exception {
-        
         CcpyManageVO ccpyManageVO = new CcpyManageVO();
         
         JSONArray images = (JSONArray) ocrResult.get("images");
         if (images == null || images.isEmpty()) {
-            log.warn("이미지가 없습니다");
             return ccpyManageVO;
         }
         
         JSONObject imageResult = (JSONObject) images.get(0);
         JSONArray fields = (JSONArray) imageResult.get("fields");
         
-        if (fields != null) {
-            List<String> bizcndList = new ArrayList<>();
-            List<String> indutyList = new ArrayList<>();
+        if (fields == null) {
+            return ccpyManageVO;
+        }
+        
+        List<String> bizcndList = new ArrayList<>();
+        List<String> indutyList = new ArrayList<>();
+        
+        // for-each: 각 필드 처리
+        for (Object field : fields) {
+            JSONObject fieldObj = (JSONObject) field;
+            String fieldName = (String) fieldObj.get("name");
+            String fieldValue = (String) fieldObj.get("inferText");
             
-            for (Object field : fields) {
-                JSONObject fieldObj = (JSONObject) field;
-                String fieldName = (String) fieldObj.get("name");
-                String fieldValue = (String) fieldObj.get("inferText");
-                
-                if (fieldValue == null || fieldValue.trim().isEmpty()) {
-                    continue;
-                }
-                
-                // 간단한 필드 매핑
-                if ("ccpyBizrno".equals(fieldName)) {
-                    ccpyManageVO.setCcpyBizrno(extractNumber(fieldValue));
-                    log.info("check : setCcpyBizrno => {}", ccpyManageVO.getCcpyBizrno());
-                    
-                } else if ("ccpyCmpnyNm".equals(fieldName)) {
-                    ccpyManageVO.setCcpyCmpnyNm(extractAfterColon(fieldValue));
-                    log.info("check : setCcpyCmpnyNm => {}", ccpyManageVO.getCcpyCmpnyNm());
-                    
-                } else if ("ccpyRprsntvNm".equals(fieldName)) {
-                    ccpyManageVO.setCcpyRprsntvNm(extractAfterColon(fieldValue).replaceAll("\\s+", ""));
-                    log.info("check : setCcpyRprsntvNm => {}", ccpyManageVO.getCcpyRprsntvNm());
-                    
-                } else if ("ccpyOpbizDe".equals(fieldName)) {
-                    try {
-                    	LocalDate parsedDate = parseLocalDate(fieldValue);
-                    	Date convertedDate = convertLocalDateToDate(parsedDate);
-                        ccpyManageVO.setCcpyOpbizDe(convertedDate);
-                        log.info("check : setCcpyOpbizDe => {}", ccpyManageVO.getCcpyOpbizDe());
-                    } catch (Exception e) {
-                        log.warn("check : error/setCcpyOpbizDe => {}", fieldValue);
-                    }
-                    
-                } else if ("ccpyAdres".equals(fieldName)) {
-                    ccpyManageVO.setCcpyAdres(extractAfterColon(fieldValue).replaceAll("^\\s+", ""));
-                    log.info("check : setCcpyAdres => {}", ccpyManageVO.getCcpyAdres());
-                    
-                } else if ("bizcndNm".equals(fieldName)) {
-                    String[] items = fieldValue.split("\n");
-                    for (String item : items) {
-                        String trimmed = item.trim();
-                        if (!trimmed.isEmpty()) {
-                            bizcndList.add(trimmed);
-                        }
-                    }
-                    log.info("check : bizcndList => {}", bizcndList);
-                    
-                } else if ("indutyNm".equals(fieldName)) {
-                    String[] items = fieldValue.split("\n");
-                    for (String item : items) {
-                        String trimmed = item.trim();
-                        if (!trimmed.isEmpty()) {
-                            indutyList.add(trimmed);
-                        }
-                    }
-                    log.info("check : indutyList => {}", indutyList);
-                }
+            // null/empty 체크
+            if (fieldName == null || fieldName.trim().isEmpty() ||
+                fieldValue == null || fieldValue.trim().isEmpty()) {
+                continue;
             }
             
-            ccpyManageVO.setBizcndIndutyVOList(
-                createBizcndIndutyList(bizcndList, indutyList)
-            );
+            // Map에서 조회 후 실행
+            if (fieldExtractors.containsKey(fieldName)) {
+                fieldExtractors.get(fieldName).extract(ccpyManageVO, fieldValue);
+            } 
+            // bizcndNm, indutyNm 처리 
+            else if ("bizcndNm".equals(fieldName)) {
+                collectListField(fieldValue, bizcndList);
+            } 
+            else if ("indutyNm".equals(fieldName)) {
+                collectListField(fieldValue, indutyList);
+            }
         }
+        
+        // 업태/업종 VO 생성 및 추가
+        ccpyManageVO.setBizcndIndutyVOList(
+            createBizcndIndutyList(bizcndList, indutyList)
+        );
+        
         return ccpyManageVO;
     }
     
+    // 리스트 필드 수집 헬퍼
+    private void collectListField(String fieldValue, List<String> targetList) {
+        String[] items = fieldValue.split("\n");
+        for (String item : items) {
+            String trimmed = item.trim();
+            if (!trimmed.isEmpty()) {
+                targetList.add(trimmed);
+            }
+        }
+    }
+    
+    // 날짜 변환
     private Date convertLocalDateToDate(LocalDate localDate) {
         if (localDate == null) return null;
         return java.sql.Date.valueOf(localDate);
     }
     
+    // 업태/업종 VO 리스트 생성
     private List<BizcndIndutyVO> createBizcndIndutyList(
         List<String> bizcndList, 
         List<String> indutyList) {
@@ -177,6 +187,7 @@ public class OcrService {
         return bizcndIndutyVOList;
     }
     
+    // OCR 요청 JSON 생성
     private JSONObject createRequestJson() {
         JSONObject json = new JSONObject();
         json.put("version", "V2");
@@ -194,6 +205,7 @@ public class OcrService {
         return json;
     }
     
+    // Multipart 요청 전송
     private void sendMultipartRequest(HttpURLConnection con, String boundary, 
                                      String message, String imagePath) throws Exception {
         try (DataOutputStream wr = new DataOutputStream(con.getOutputStream())) {
@@ -222,6 +234,7 @@ public class OcrService {
         }
     }
     
+    // OCR 응답 수신
     private JSONObject receiveResponse(HttpURLConnection con) throws Exception {
         int responseCode = con.getResponseCode();
         log.info("check : responseCode => {} ", responseCode);
@@ -241,7 +254,8 @@ public class OcrService {
         }
     }
     
-  private String extractAfterColon(String text) {
+    // 텍스트 추출 유틸리티 
+    private String extractAfterColon(String text) {
         if (text == null) return "";
         
         int colonIndex = text.indexOf(":");
@@ -252,10 +266,22 @@ public class OcrService {
         return text.substring(colonIndex + 1).trim();
     }
     
+    // 한글, 숫자, 특정 기호만 남기기
+    private String extractKoreanAndNumbers(String text) {
+        return text == null ? "" : text.replaceAll("[^가-힣0-9\\-\\s]", "").trim();
+    }
+
+    // 한글만 남기기
+    private String extractKoreanOnly(String text) {
+        return text == null ? "" : text.replaceAll("[^가-힣\\s]", "").trim();
+    }
+
+    // 숫자만 남기기
     private String extractNumber(String text) {
-        return text == null ? "" : text.replaceAll("[^0-9-]", "").trim();
+        return text == null ? "" : text.replaceAll("[^0-9]", "").trim();
     }
     
+    // 날짜 파싱
     private LocalDate parseLocalDate(String dateStr) throws Exception {
         if (dateStr == null) return LocalDate.now();
         

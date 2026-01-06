@@ -34,7 +34,7 @@ public class MtinspScheduler {
      *                 초 분 시 일 월 요일
      * <p>Cron 표현식: "0 0 0 * * *"</p>
      */
-    @Scheduled(cron = "0 0 0 * * *")
+    @Scheduled(cron = "0 35 11 4 12 *")
     @Transactional
     public void analyzeDailyAnomalies() {
         log.info("========== 일일 검침 이상치 분석 시작 (그룹화 기반) ==========");

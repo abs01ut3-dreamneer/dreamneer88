@@ -104,8 +104,11 @@ public class CcpyManageController {
 		long ccpyDtaFileGroupSn = this.uploadController.multiImageUpload(uploadFiles);
 		CcpyDtaVO ccpyDtaVO = new CcpyDtaVO();
 		ccpyDtaVO.setFileGroupSn(ccpyDtaFileGroupSn);
+		
+		// bCryptPassowordEncoder 비밀번호 해싱 
 		String encodedPassword = bCryptPasswordEncoder.encode(ccpyManageVO.getCcpyPassword());
 		ccpyManageVO.setCcpyPassword(encodedPassword);
+		
 		int result = this.ccpyManageService.postCcpyManageVO(ccpyManageVO, ccpyDtaVO);
 		return "redirect:/ccpyManage/wait?ccpyManageId="+ccpyManageVO.getCcpyManageId();
 	}
@@ -182,10 +185,11 @@ public class CcpyManageController {
 		
 		int res = this.ccpyManageService.putCcpyAuthor(ccpyManageVO);		
 		ccpyManageVO = this.ccpyManageService.getCcpyManage(ccpyManageVO);
+		
 		try {
 			boolean result = emailService.queueCcpyApprovalEmail(ccpyManageVO);
 			map.put("success", result);	
-			map.put("message", result ? "발송 이메일에 등록 완료, 수 분 내 발송" : "❌ 이메일 등록 실패");
+			map.put("message", result ? "발송 이메일에 등록 완료" : "❌ 이메일 등록 실패");
 		} catch(Exception e){
 			map.put("success", false);
 			map.put("message", "❌ 에러: " + e.getMessage());
@@ -204,7 +208,7 @@ public class CcpyManageController {
 		try {
 			boolean result = emailService.queueCcpyRejectionEmail(ccpyManageVO, "부적격");
 			map.put("success", result);
-			map.put("message", result ? "발송 이메일에 등록 완료, 수 분 내 발송" : "❌ 이메일 등록 실패");
+			map.put("message", result ? "발송 이메일에 등록 완료" : "❌ 이메일 등록 실패");
 		}catch(Exception e){
 			map.put("success", false);
 			map.put("message", "❌ 에러: " + e.getMessage());			

@@ -4,41 +4,33 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import lombok.extern.slf4j.Slf4j;
-import org.mybatis.logging.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * 이동평균 & 표준편차 기반 이상치 탐지 분석 모듈.
+ * 이동평균과 표준편차를 활용한 이상치 탐지 엔진
  * 
- * <p>
- * [주요 목적]
- * - 과거의 사용량 데이터를 기반으로 요일별 평균 및 표준편차를 계산
- * - 실시간 신규 검침 데이터가 주어졌을 때, 해당 요일의 통계 기준으로 Z-Score를 산출하여
- *   평상시보다 사용량이 비정상적으로 적거나 많은 경우 이상치(Anomaly)로 탐지.
+ * 알고리즘: 이중 필터 (Hybrid Filter)
+ * - 1차 필터: Z-Score 기반 통계적 이상치 탐지
+ * - 2차 필터: 4주 평균 대비 변동률 기반 패턴 변화 탐지
+ * - 최종 판정: 1차 AND 2차 모두 만족시 이상치로 판정
  * 
- * [적용 시나리오]
- * - 각 세대별 검침량(전기, 가스, 수도 등)을 실시간으로 분석하여
- *   사용량 급증/급감 세대를 자동으로 감지하고 알림 기능에 활용.
- * 
- * [기법 요약]
- * - 이동평균(moving average): 최근 N주(week) 간의 데이터를 기준으로 계산
- * - 표준편차(standard deviation): 평균값으로부터 데이터의 흩어진 정도를 나타냄
- * - Z-score = (현재값 - 평균) / 표준편차
- * - Z-score가 임계값(Z_SCORE_THRESHOLD, 기본 2.5)을 초과하면 '이상치'로 판단
+ * 목적: 관리비 검침 데이터에서 비정상 사용량 자동 감지
  */
 @Slf4j
 @Component
 public class MovingAvgStdAnalysis {
-
-    // Z-score 임계값 (1차 필터: 이보다 크면 이상치로 간주)
+	// 1차 필터 임계값: Z-Score가 이 값을 초과하면 통계적 이상치로 판정
+	// 의미: 평균에서 표준편차의 2.5배 이상 떨어진 경우
     private static final double Z_SCORE_THRESHOLD = 2.5;
-    // 4주 평균 대비 변동률 임계값 (2차 필터: 50% 변동 기준)
+    
+    // 2차 필터 임계값: 4주 평균 대비 50% 이상 변동시 패턴 이상으로 판정
+ 	// 의미: 4주 평균의 150% 초과 또는 50% 미만일 경우
     private static final double RECENT_ANOMALY_RATIO = 0.5;
-
+   
     // 통계 계산을 신뢰할 수 있는 최소 데이터 수
     private static final int MIN_DATA_POINTS = 2;
 
@@ -46,10 +38,10 @@ public class MovingAvgStdAnalysis {
      * 요일별 통계를 관리하는 내부 클래스.
      */
     private static class TimeSlotStats {
-        double mean;
-        double stdDev;
-        List<Double> values;
-        int dataPoints;
+    	double mean;              // 해당 요일의 평균 사용량
+		double stdDev;            // 해당 요일의 표준편차 (변동폭)
+		List<Double> values;      // 해당 요일의 사용량 데이터 목록
+		int dataPoints;           // 데이터 개수
 
         TimeSlotStats() {
             this.values = new ArrayList<>();
@@ -71,24 +63,23 @@ public class MovingAvgStdAnalysis {
 
     /**
      * 이중 필터를 적용하는 이상치 탐지 메서드.
-     * * @param historicalData 과거 N주간의 사용량 데이터 (세대/항목별로 이미 그룹화됨)
+     * @param historicalData 과거 N주간의 사용량 데이터 (세대/항목별로 이미 그룹화됨)
      * @param newData 새로 들어온 실시간 데이터 (분석 대상)
      * @param movingAverageWeeks 이동평균 기준 기간(주 단위)
      * @return 분석 결과가 적용된 newData 리스트 반환
-     */
-    /**
-     * 이중 필터를 적용하는 이상치 탐지 메서드 (DOW Z-Score && 4주 평균 이탈)
-     */
+     */   
     public List<MovingAvgStdPoint> detectAnomalyHybridRealTime(
             List<MovingAvgStdPoint> historicalData,
             List<MovingAvgStdPoint> newData,
             int movingAverageWeeks) {
 
-        // 1. 요일별 통계 정보 생성 (1차 필터 기준 준비)
+    	// Step 1: 요일별 통계 생성 (1차 필터 기준값)
+		// 과거 데이터를 월~일별로 그룹화하고 각 요일의 평균/표준편차 계산
         Map<Integer, TimeSlotStats> dayOfWeekStats = buildDayOfWeekStats(
                 historicalData, movingAverageWeeks);
 
-        // 2. 4주간 일 평균 계산 (2차 필터 기준값)
+        // Step 2: 4주간 전체 평균 계산 (2차 필터 기준값)
+     	// 모든 과거 데이터의 평균을 구함
         double fourWeekDailyAvg = calculateMean(
                 historicalData.stream()
                         .mapToDouble(MovingAvgStdPoint::getUsgqty)
@@ -96,13 +87,13 @@ public class MovingAvgStdAnalysis {
                         .collect(Collectors.toList())
         );
 
-        // 3. 신규 데이터 순회하며 이중 이상치 탐지 수행
+        // Step 3: 신규 데이터 순회하며 이중 필터 적용
         for (MovingAvgStdPoint newPoint : newData) {
-
+        	
             int dayOfWeek = newPoint.getDate().getDayOfWeek().getValue() % 7;
             TimeSlotStats stats = dayOfWeekStats.get(dayOfWeek);
 
-            // A. 요일별 Z-Score 1차 분석
+            // 요일별 Z-Score 1차 분석
             boolean isZScoreAnomaly = false;
             double zScore = 0.0;
 
@@ -119,7 +110,7 @@ public class MovingAvgStdAnalysis {
                 continue;
             }
 
-            // B. 4주 평균 대비 2차 필터링
+            // 4주 평균 대비 2차 필터링
             boolean isRecentPatternAnomaly = false;
             if (fourWeekDailyAvg > 0) {
                 double readingValue = newPoint.getUsgqty();
@@ -130,12 +121,12 @@ public class MovingAvgStdAnalysis {
                 }
             }
 
-            // C. 최종 판단: 두 기준 모두 만족 (AND 조건)
+            // 최종 판단: 두 기준 모두 만족 (AND 조건)
             if (isZScoreAnomaly && isRecentPatternAnomaly) {
                 newPoint.setAnomaly(true);
                 newPoint.setAnalysisStatus("FINAL_ANOMALY");
-                log.warn("🚨 이중 이상 감지: HshldId={}, IemNm={} (Z={:.2f}, 4WAvg={:.2f})",
-                        newPoint.getHshldId(), newPoint.getIemNm(), zScore, fourWeekDailyAvg);
+                log.warn("이중 이상 감지: HshldId={}, ItemNm={} (Z={:.2f}, 4WAvg={:.2f})",
+                        newPoint.getHshldId(), newPoint.getItemNm(), zScore, fourWeekDailyAvg);
             } else {
                 newPoint.setAnomaly(false);
                 newPoint.setAnalysisStatus("FILTERED_NORMAL");

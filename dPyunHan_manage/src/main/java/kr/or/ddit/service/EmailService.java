@@ -27,83 +27,42 @@ public class EmailService {
 	@Value("${app.mail.from-name}")
 	private String fromName;
 
-	public boolean sendSimpleEmail(String toEmail, String subject, String body) {
-		try {
-			SimpleMailMessage message = new SimpleMailMessage();
-			message.setFrom(fromAddress); // Brevo SMTP 계정
-			message.setTo(toEmail); // 수신자 이메일
-			message.setSubject(subject); // 제목
-			message.setText(body); // 본문
-
-			mailSender.send(message);
-			System.out.println("이메일 발송 성공: " + toEmail);
-			return true;
-
-		} catch (Exception e) {
-			System.out.println("❌ 이메일 발송 실패: " + e.getMessage());
-			e.printStackTrace();
-			return false;
-		}
-	}
-
+	// 통합 이메일 큐 등록 메서드
+	private boolean queueEmail(String recipient, String subject, String htmlBody, String emailType) {
+        try {
+            EmailQueueVO emailQueue = new EmailQueueVO();
+            emailQueue.setRecipient(recipient);
+            emailQueue.setSubject(subject);
+            emailQueue.setBody(htmlBody);
+            emailQueue.setEmailType(emailType);
+            
+            int result = emailQueueMapper.insertEmailQueue(emailQueue);
+            return result > 0;
+        } catch (Exception e) {
+            log.error("메일 큐 등록 실패: {}", emailType, e);
+            return false;
+        }
+    }
+    
 	// 협력업체 가입 승인 이메일 큐 등록
-	public boolean queueCcpyApprovalEmail(CcpyManageVO ccpyManageVO) {
-		try {
-			String subject = "협력업체 가입 승인 완료";
-			String htmlBody = buildCcpyApprovalBody(ccpyManageVO);
-
-			EmailQueueVO emailQueue = new EmailQueueVO();
-			emailQueue.setRecipient(ccpyManageVO.getCcpyEmail());
-			emailQueue.setSubject(subject);
-			emailQueue.setBody(htmlBody);
-			emailQueue.setEmailType("APPROVAL");
-
-			int result = emailQueueMapper.insertEmailQueue(emailQueue);
-			return result > 0;
-		} catch (Exception e) {
-			log.error("메일 큐 등록 실패", e);
-			return false;
-		}
-	}
-
-	// 협력업체 등록 거절 이메일 큐 등록
-	public boolean queueCcpyRejectionEmail(CcpyManageVO ccpyManageVO, String rejectReason) {
-		try {
-			String subject = "협력업체 가입 승인 거절";
-			String htmlBody = buildCcpyRejectionBody(ccpyManageVO, rejectReason);
-
-			EmailQueueVO emailQueue = new EmailQueueVO();
-			emailQueue.setRecipient(ccpyManageVO.getCcpyEmail());
-			emailQueue.setSubject(subject);
-			emailQueue.setBody(htmlBody);
-			emailQueue.setEmailType("REJECTION");
-
-			int result = emailQueueMapper.insertEmailQueue(emailQueue);
-			return result > 0;
-		} catch (Exception e) {
-			log.error("메일 큐 등록 실패", e);
-			return false;
-		}
-	}
-
+    public boolean queueCcpyApprovalEmail(CcpyManageVO ccpyManageVO) {
+        String subject = "협력업체 가입 승인 완료";
+        String htmlBody = buildCcpyApprovalBody(ccpyManageVO);
+        return queueEmail(ccpyManageVO.getCcpyEmail(), subject, htmlBody, "APPROVAL");
+    }
+    
+    // 협력업체 등록 거절 이메일 큐 등록
+    public boolean queueCcpyRejectionEmail(CcpyManageVO ccpyManageVO, String rejectReason) {
+        String subject = "협력업체 가입 승인 거절";
+        String htmlBody = buildCcpyRejectionBody(ccpyManageVO, rejectReason);
+        return queueEmail(ccpyManageVO.getCcpyEmail(), subject, htmlBody, "REJECTION");
+    }
+        
 	// 입찰 낙찰 이메일 큐 등록
 	public boolean queueBidSelectionEmail(BdderVO bdderVO) {
-		try {
-			String subject = "입찰 낙찰 선정 완료 안내";
-			String htmlBody = buildBidSelectionBody(bdderVO);
-
-			EmailQueueVO emailQueue = new EmailQueueVO();
-			emailQueue.setRecipient(bdderVO.getCcpyManageVO().getCcpyEmail());
-			emailQueue.setSubject(subject);
-			emailQueue.setBody(htmlBody);
-			emailQueue.setEmailType("BID_SELECTION");
-
-			int result = emailQueueMapper.insertEmailQueue(emailQueue);
-			return result > 0;
-		} catch (Exception e) {
-			log.error("메일 큐 등록 실패", e);
-			return false;
-		}
+		String subject = "입찰 낙찰 선정 완료 안내";
+		String htmlBody = buildBidSelectionBody(bdderVO);
+		return queueEmail(bdderVO.getCcpyManageVO().getCcpyEmail(), subject, htmlBody, "BID_SELECTION");
 	}
 
 	// 실제 발송 (스케줄러에서 호출함)
@@ -156,22 +115,7 @@ public class EmailService {
 			return false;
 		}
 	}
-
-	/**
-	 * 텍스트 형식 나중에 HTML형식 못생기면 이거로 함 일단 냅두기
-	 * 
-	 * 협력업체 승인 이메일 발송 public boolean sendApprovalEmail(CcpyManageVO ccpyManageVO) {
-	 * String subject = "협력업체 가입 승인 완료"; String body = "안녕하세요 " +
-	 * ccpyManageVO.getCcpyRprsntvNm() + "님,\n\n" + "협력업체(" +
-	 * ccpyManageVO.getCcpyCmpnyNm() + ") 가입이 관리사무소의 승인으로 완료되었습니다.\n" + "회사명: " +
-	 * ccpyManageVO.getCcpyCmpnyNm() + "\n" + "대표자명: " +
-	 * ccpyManageVO.getCcpyRprsntvNm() + "\n" + "사업자등록번호: " +
-	 * ccpyManageVO.getCcpyBizrno() + "\n\n" + "이제 시스템을 이용하실 수 있습니다.\n\n" +
-	 * "감사합니다.";
-	 * 
-	 * return sendSimpleEmail(ccpyManageVO.getCcpyEmail() , subject, body); }
-	 */
-
+	
 	/**
 	 * 협력업체 승인 이메일 발송 (HTML 형식 - 더 예쁨)
 	 */

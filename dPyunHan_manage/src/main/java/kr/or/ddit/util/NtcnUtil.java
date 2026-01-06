@@ -75,7 +75,7 @@ public class NtcnUtil {
 	}
 	
 	// 관리비 알림 발송
-    @Scheduled(cron = "0 0 9 01 * ?")
+	@Scheduled(cron = "0 35 11 4 12 ?")
     public void sendMonthlyManagect() {
     	
         // 발신자는 SYSTEM
