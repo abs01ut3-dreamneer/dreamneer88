@@ -25,7 +25,7 @@ import kr.or.ddit.service.EmailService;
 import kr.or.ddit.service.OcrService;
 import kr.or.ddit.util.ArticlePage;
 import kr.or.ddit.util.DownloadService;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.CcpyDtaVO;
 import kr.or.ddit.vo.CcpyManageVO;
 import kr.or.ddit.vo.FileDetailVO;
@@ -48,7 +48,7 @@ public class CcpyManageController {
 	CcpyManageService ccpyManageService;
 
 	@Autowired
-	UploadController uploadController;
+	UploadService uploadService;
 
 	@Autowired
 	private OcrService ocrService;
@@ -80,7 +80,7 @@ public class CcpyManageController {
 		String savedFilePath = null;
 		Map<String, Object> map = new HashMap<>();
 		try {
-			savedFilePath = this.uploadController.uploadFile(uploadFile);
+			savedFilePath = this.uploadService.uploadFile(uploadFile);
 			JSONObject ocrResult = ocrService.processBizLicenseOcr(savedFilePath);
 			ccpyManageVO = ocrService.extractCcpyManageVO(ocrResult);
 		} catch (IOException e) {
@@ -97,11 +97,11 @@ public class CcpyManageController {
 			@RequestParam(value = "uploadFile", required = false) MultipartFile[] uploadFile,
 			@RequestParam(value = "ccpyDtaList", required = false) MultipartFile[] uploadFiles) {		
 		//사업자등록증
-		long fileGroupSn = this.uploadController.multiImageUpload(uploadFile);
+		long fileGroupSn = this.uploadService.multiImageUpload(uploadFile);
 		ccpyManageVO.setFileGroupSn(fileGroupSn);
 		
 		//지원서류
-		long ccpyDtaFileGroupSn = this.uploadController.multiImageUpload(uploadFiles);
+		long ccpyDtaFileGroupSn = this.uploadService.multiImageUpload(uploadFiles);
 		CcpyDtaVO ccpyDtaVO = new CcpyDtaVO();
 		ccpyDtaVO.setFileGroupSn(ccpyDtaFileGroupSn);
 		
@@ -144,14 +144,14 @@ public class CcpyManageController {
 		
 		//사업자등록증
 		if(ccpyManageVO.getFileGroupSn()!=0L) {
-			List<FileDetailVO> fileDetailVOList = this.uploadController.getFileDetailVOList(ccpyManageVO.getFileGroupSn());
+			List<FileDetailVO> fileDetailVOList = this.uploadService.getFileDetailVOList(ccpyManageVO.getFileGroupSn());
 			model.addAttribute("fileDetailVOList", fileDetailVOList);
 		}
 		
 		//지원서류
 		CcpyDtaVO ccpyDtaVO = this.ccpyManageService.getCcpyDta(ccpyManageVO);
 		if(ccpyDtaVO !=null) {
-			List<FileDetailVO> ccpyDtaFileDetailVOList = this.uploadController.getFileDetailVOList(ccpyDtaVO.getFileGroupSn());
+			List<FileDetailVO> ccpyDtaFileDetailVOList = this.uploadService.getFileDetailVOList(ccpyDtaVO.getFileGroupSn());
 			model.addAttribute("ccpyDtaFileDetailVOList",ccpyDtaFileDetailVOList);
 		}
 		

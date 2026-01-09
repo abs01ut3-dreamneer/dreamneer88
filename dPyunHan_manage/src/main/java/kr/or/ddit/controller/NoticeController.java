@@ -28,7 +28,7 @@ import kr.or.ddit.service.NoticeService;
 import kr.or.ddit.service.impl.CustomUser;
 import kr.or.ddit.util.ArticlePage;
 import kr.or.ddit.util.DownloadService;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.FileDetailVO;
 import kr.or.ddit.vo.NoticeVO;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ public class NoticeController {
 	NoticeService noticeService;
 
 	@Autowired
-	UploadController uploadController;
+	UploadService uploadService;
 
 	@Autowired
 	DownloadService downloadService;
@@ -116,7 +116,7 @@ public class NoticeController {
 
 		long fileGroupSn = 0;
 		if (!validFiles.isEmpty()) {
-			fileGroupSn = uploadController.multiImageUpload(validFiles.toArray(new MultipartFile[0]));
+			fileGroupSn = uploadService.multiImageUpload(validFiles.toArray(new MultipartFile[0]));
 		}
 
 		noticeVO.setFileGroupSn(fileGroupSn);

@@ -2,7 +2,7 @@ package kr.or.ddit.service.impl;
 
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.pdf.BaseFont;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.FileDetailVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ public class HtmlToPdfServiceImpl {
 
     private final ResourceLoader resourceLoader;
 
-    private final UploadController uploadController;
+    private final UploadService uploadService;
 
     public FileDetailVO generateAndSavePdf(
             String htmlContent,
@@ -52,7 +52,7 @@ public class HtmlToPdfServiceImpl {
 
         // 3. 영구 저장소로 이동 및 DB 등록 (FileService 호출)
         // 🚨 이 fileService.commitTempFile()은 FileDetailVO를 반환해야 합니다. 🚨
-        FileDetailVO savedFileVO = uploadController.commitTempFile(initialFileGroupSn, tempFile, originalFilename);
+        FileDetailVO savedFileVO = uploadService.commitTempFile(initialFileGroupSn, tempFile, originalFilename);
 
         // 4. 결과 DTO 반환
         return savedFileVO;

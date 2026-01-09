@@ -25,7 +25,7 @@ import kr.or.ddit.service.BidPblancService;
 import kr.or.ddit.service.impl.CustomUser;
 import kr.or.ddit.util.ArticlePage;
 import kr.or.ddit.util.DownloadService;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.BdderVO;
 import kr.or.ddit.vo.BidPblancVO;
 import kr.or.ddit.vo.BidSearchVO;
@@ -45,7 +45,7 @@ public class BidPblancController {
 	BdderService bdderService;
 
 	@Autowired
-	UploadController uploadService;
+	UploadService uploadService;
 
 	@Autowired
 	BidPblancService bidPblancService;

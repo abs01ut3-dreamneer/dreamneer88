@@ -9,6 +9,10 @@
 		<item key="incremental" value="false"/>
 		<item key="isRegEx" value="false"/>
 		<list key="findhistory">
+			<item value="ByteArrayResource"/>
+			<item value="uploadController"/>
+			<item value="UploadController"/>
+			<item value="Upload"/>
 			<item value="card-"/>
 			<item value="re"/>
 			<item value="referer"/>
@@ -20,13 +24,10 @@
 			<item value="getTotal"/>
 			<item value="sitename"/>
 			<item value="jsou"/>
-			<item value="Home"/>
-			<item value="empVO"/>
-			<item value="postBkmkSanctnlnDetail"/>
-			<item value="uploadController"/>
 		</list>
 		<list key="replacehistory">
 			<item value="uploadService"/>
+			<item value="UploadService"/>
 			<item value="D_"/>
 			<item value="S_"/>
 			<item value="simpleDeptVOMap"/>

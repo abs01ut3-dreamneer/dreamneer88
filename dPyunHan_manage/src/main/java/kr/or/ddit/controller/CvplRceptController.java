@@ -20,7 +20,7 @@ import kr.or.ddit.config.BeanController;
 import kr.or.ddit.service.CvplRceptService;
 import kr.or.ddit.service.impl.CustomUser;
 import kr.or.ddit.util.ArticlePage;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.CvplRceptVO;
 import kr.or.ddit.vo.CvplVO;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ public class CvplRceptController {
 	BeanController beanController;
 
 	@Autowired
-	UploadController uploadController;
+	UploadService uploadService;
 
 	@GetMapping("/ntcn/go")
 	public String ntcnGo(@RequestParam int cvplSn, HttpSession session) {

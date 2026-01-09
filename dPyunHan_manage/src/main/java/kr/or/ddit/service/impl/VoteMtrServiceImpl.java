@@ -13,7 +13,7 @@ import kr.or.ddit.enums.NtcnType;
 import kr.or.ddit.mapper.VoteMtrMapper;
 import kr.or.ddit.service.VoteMtrService;
 import kr.or.ddit.util.NtcnUtil;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.VoteIemVO;
 import kr.or.ddit.vo.VoteMtrVO;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class VoteMtrServiceImpl implements VoteMtrService {
 
 	@Autowired
-	UploadController uploadController;
+	UploadService uploadService;
 	
 
 	@Autowired

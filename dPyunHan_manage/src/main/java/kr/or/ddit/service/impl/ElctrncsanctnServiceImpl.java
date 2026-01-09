@@ -17,7 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import kr.or.ddit.mapper.ElctrncsanctnMapper;
 import kr.or.ddit.service.ElctrncsanctnService;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.BkmkSanctnlnDataVO;
 import kr.or.ddit.vo.BkmkSanctnlnDetailVO;
 import kr.or.ddit.vo.BkmkSanctnlnVO;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 
 	@Autowired
-	UploadController uploadService;
+	UploadService uploadService;
 
 	@Autowired
 	ElctrncsanctnMapper elctrncsanctnMapper;

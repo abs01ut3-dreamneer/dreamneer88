@@ -35,11 +35,11 @@ public class DownloadService {
     private static final String ZIP_FILENAME = "files.zip";
 
     @Autowired
-    private UploadController uploadController;
+    private UploadService uploadService;
 
     // 파일 정보 가져오기
     private FileDetailVO getFileOrThrow(long fileGroupSn, int fileNo) {
-        FileDetailVO fileDetailVO = uploadController.getFileDetail(fileGroupSn, fileNo);
+        FileDetailVO fileDetailVO = uploadService.getFileDetail(fileGroupSn, fileNo);
         if (fileDetailVO == null) {
             throw new IllegalArgumentException("파일을 찾을 수 없습니다: " + fileGroupSn + "/" + fileNo);
         }
@@ -114,7 +114,7 @@ public class DownloadService {
     // 전체 파일 다운로드
     public ResponseEntity<Resource> downloadAll(long fileGroupSn) {
         try {
-            List<FileDetailVO> fileDetailVOList = uploadController.getFileDetailVOList(fileGroupSn);
+            List<FileDetailVO> fileDetailVOList = uploadService.getFileDetailVOList(fileGroupSn);
 
             if (fileDetailVOList == null || fileDetailVOList.isEmpty()) {
                 log.warn("다운로드할 파일 없음: {}", fileGroupSn);
@@ -217,7 +217,7 @@ public class DownloadService {
 
     // ZIP에 파일 엔트리 추가
     private void addFileToZip(ZipOutputStream zos, long fileGroupSn, int fileNo) throws IOException {
-        FileDetailVO fileDetailVO = uploadController.getFileDetail(fileGroupSn, fileNo);
+        FileDetailVO fileDetailVO = uploadService.getFileDetail(fileGroupSn, fileNo);
         if (fileDetailVO == null) {
             log.debug("파일 정보 없음: {}/{}", fileGroupSn, fileNo);
             return;

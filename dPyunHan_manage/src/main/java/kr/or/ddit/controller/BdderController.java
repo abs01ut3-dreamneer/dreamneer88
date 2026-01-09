@@ -26,7 +26,7 @@ import kr.or.ddit.service.EmailService;
 import kr.or.ddit.service.impl.CustomUser;
 import kr.or.ddit.util.ArticlePage;
 import kr.or.ddit.util.DownloadService;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.BdderVO;
 import kr.or.ddit.vo.BidPblancVO;
 import kr.or.ddit.vo.CcpyManageVO;
@@ -50,7 +50,7 @@ public class BdderController {
 	CcpyManageService ccpyManageService;
 
 	@Autowired
-	UploadController uploadController;
+	UploadService uploadService;
 
 	@Autowired
 	BdderService bdderService;
@@ -60,7 +60,7 @@ public class BdderController {
 			Authentication authentication, @AuthenticationPrincipal CustomUser customuser) {
 
 		CcpyManageVO ccpyManageVO = customuser.getCcpyManageVO();
-		List<FileDetailVO> ccpyfileDetailVOList = this.uploadController
+		List<FileDetailVO> ccpyfileDetailVOList = this.uploadService
 				.getFileDetailVOList(ccpyManageVO.getFileGroupSn());
 
 		BidPblancVO bidPblancVO = new BidPblancVO();
@@ -68,7 +68,7 @@ public class BdderController {
 
 		bidPblancVO = this.bidPblancService.getBidPblancVO(bidPblancVO);
 
-		List<FileDetailVO> bidPblancFileDetailVOList = this.uploadController
+		List<FileDetailVO> bidPblancFileDetailVOList = this.uploadService
 				.getFileDetailVOList(bidPblancVO.getFileGroupSn());
 
 		model.addAttribute("bidPblancVO", bidPblancVO);
@@ -84,7 +84,7 @@ public class BdderController {
 	@PostMapping("/postBdder")
 	public String postBdder(BdderVO bdderVO, BidPblancVO bidPblancVO, CcpyManageVO ccpyManageVO,
 			@RequestParam(value = "inputFiles", required = false) MultipartFile[] uploadFiles) {
-		long fileGroupSn = this.uploadController.multiImageUpload(uploadFiles);
+		long fileGroupSn = this.uploadService.multiImageUpload(uploadFiles);
 		
 		bdderVO.setBidPblancSn(bidPblancVO.getBidPblancSn());
 		bdderVO.setCcpyManageId(ccpyManageVO.getCcpyManageId());
@@ -123,17 +123,17 @@ public class BdderController {
 	public String getBdder(BdderVO bdderVO, Model model) {
 		bdderVO = this.bdderService.getBdder(bdderVO);
 
-		List<FileDetailVO> bdderFileDetailVOList = this.uploadController
+		List<FileDetailVO> bdderFileDetailVOList = this.uploadService
 				.getFileDetailVOList(bdderVO.getFileGroupSn());
 		
 		CcpyManageVO ccpyManageVO = bdderVO.getCcpyManageVO();
 
-		List<FileDetailVO> ccpyfileDetailVOList = this.uploadController
+		List<FileDetailVO> ccpyfileDetailVOList = this.uploadService
 				.getFileDetailVOList(ccpyManageVO.getFileGroupSn());
 
 		BidPblancVO bidPblancVO = bdderVO.getBidPblancVO();
 
-		List<FileDetailVO> bidPblancFileDetailVOList = this.uploadController
+		List<FileDetailVO> bidPblancFileDetailVOList = this.uploadService
 				.getFileDetailVOList(bidPblancVO.getFileGroupSn());
 		
 		model.addAttribute("bdderFileDetailVOList", bdderFileDetailVOList);

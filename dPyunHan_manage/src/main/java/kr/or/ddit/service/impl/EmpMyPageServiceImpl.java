@@ -7,7 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 import kr.or.ddit.mapper.EmpMyPageMapper;
 import kr.or.ddit.mapper.SignMapper;
 import kr.or.ddit.service.EmpMyPageService;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.EmpVO;
 import kr.or.ddit.vo.SignVO;
 import lombok.extern.slf4j.Slf4j;
@@ -28,14 +28,14 @@ public class EmpMyPageServiceImpl implements EmpMyPageService {
 	
 	
 	@Autowired
-	UploadController uploadController;
+	UploadService uploadService;
 	
 	   @Override
 	   public int empEdit(EmpVO empVO ) {
 	      
 	      MultipartFile[] uploadFiles = empVO.getUploadFiles();
 	        if (uploadFiles != null && uploadFiles[0].getOriginalFilename().length() > 0) {
-	            long fileGroupSn = uploadController.multiImageUpload(uploadFiles);
+	            long fileGroupSn = uploadService.multiImageUpload(uploadFiles);
 	            empVO.setFileGroupSn(fileGroupSn);
 	        }
 	        int result = this.empMyPageMapper.empEdit(empVO);

@@ -7,7 +7,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import kr.or.ddit.mapper.SignMapper;
 import kr.or.ddit.service.SignService;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.SignVO;
 import lombok.extern.slf4j.Slf4j;
 @Service
@@ -26,7 +26,7 @@ public class SignServiceImpl implements SignService {
 	}
 
 	@Autowired
-	UploadController uploadController;
+	UploadService uploadService;
 	
 	@Transactional
     @Override
@@ -41,7 +41,7 @@ public class SignServiceImpl implements SignService {
         Long fileGroupSn = signVO.getFileGroupSn(); // 
         if ((fileGroupSn == null || fileGroupSn == 0L) &&
             uploadFiles != null && uploadFiles.length > 0) {
-            long uploadedGroupSn = uploadController.multiImageUpload(uploadFiles);
+            long uploadedGroupSn = uploadService.multiImageUpload(uploadFiles);
             signVO.setFileGroupSn(uploadedGroupSn);
             fileGroupSn = uploadedGroupSn;
         }

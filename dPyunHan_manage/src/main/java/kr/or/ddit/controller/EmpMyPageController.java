@@ -16,7 +16,7 @@ import kr.or.ddit.config.BeanController;
 import kr.or.ddit.mapper.EmpMapper;
 import kr.or.ddit.service.EmpMyPageService;
 import kr.or.ddit.service.SignService;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.EmpVO;
 import kr.or.ddit.vo.SignVO;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class EmpMyPageController {
 	BeanController beanController;
 
 	@Autowired
-	UploadController uploadController;
+	UploadService uploadService;
 
 	@Autowired
 	EmpMapper empMapper;

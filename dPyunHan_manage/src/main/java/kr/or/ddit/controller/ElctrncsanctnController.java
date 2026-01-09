@@ -22,7 +22,7 @@ import kr.or.ddit.service.ElctrncsanctnService;
 import kr.or.ddit.service.impl.ContractServiceImpl;
 import kr.or.ddit.service.impl.CustomUser;
 import kr.or.ddit.util.ArticlePage;
-import kr.or.ddit.util.UploadController;
+import kr.or.ddit.util.UploadService;
 import kr.or.ddit.vo.BkmkSanctnlnDataVO;
 import kr.or.ddit.vo.BkmkSanctnlnVO;
 import kr.or.ddit.vo.DeptVO;
@@ -39,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ElctrncsanctnController {
 
 	@Autowired
-	UploadController uploadService;
+	UploadService uploadService;
 
 	@Autowired
 	ElctrncsanctnService elctrnsanctnService;
