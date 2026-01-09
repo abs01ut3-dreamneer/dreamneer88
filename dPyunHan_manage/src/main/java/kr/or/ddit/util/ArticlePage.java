@@ -43,8 +43,6 @@ public class ArticlePage<T> {
 	
 	private String pagingAreaBorderedTable ="";
 
-	// 생성자(Constructor) : 페이징 정보를 생성
-	// 전체글 수 현재 페이지 번호 한 화면 목록 데이터 검색어
 	public ArticlePage(int total, int currentPage, int size, List<T> content, String keyword) {
 		// size : 한 화면에 보여질 목록의 행 수(10)
 		this.total = total;

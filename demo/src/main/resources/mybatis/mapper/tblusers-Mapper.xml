@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.mapper.TblUsersMapper">
+	<!-- 
+		email로 사용자 정보를 가져옴 (로그인) - select
+		public TblUsersVO findByEmail(String Email)
+		
+		Join문이 있으면 resultMap을 사용하자!!!!!!
+	 -->
+	 
+	 <!-- 관계차수 => 1:1, 1:N(90% 이상), N:M (거의 없다!!) -->
+	 
+	 <!-- 부모 1 -->
+	 <!-- <resultMap type="kr.or.ddit.vo.TblUsersVO" id="tblUsersMap">
+	 	<result property="id" column="ID"/>
+	 	<result property="email" column="EMAIL"/>
+	 	<result property="password" column="PASSWORD"/>
+	 	<result property="createdAt" column="CREATED_AT"/>
+	 	<result property="updatedAt" column="UPDATED_AT"/>
+	 	<result property="name" column="NAME"/>
+	 	<result property="imgUrl" column="IMG_URL"/>
+	 	<result property="accessToken" column="ACCESS_TOKEN"/>
+	 	<result property="enabled" column="ENABLED"/>
+	 	부모1에 자식이 여러개이니까 List로 받자
+	 	<collection property="tblUsersAuthVOList" resultMap="tblUsersAuthMap"></collection>
+	 </resultMap> -->
+	 
+	<!-- 자식 N 	 
+	<resultMap type="kr.or.ddit.vo.TblUsersAuthVO" id="tblUsersAuthMap">
+		<result property="email" column="EMAIL"/>
+		<result property="auth" column="AUTH"/>
+	</resultMap>
+	-->
+	 
+	 <!-- Join에서는 그냥 닥치고 resultMap 까먹지 말자 -->
+	<!-- <select id="findByEmail" parameterType="String" resultMap="tblUsersMap">
+		select a.id, a.email, a.password, a.created_at, a.updated_at,
+			a.name, a.img_url, a.access_token, a.enabled, 
+			b.auth
+		    from tbl_users a
+		    left outer join tbl_users_auth b
+		    on a.email = b.email
+		    where 1=1
+		    and a.email = #{email}
+	</select>-->
+	<!-- 부모 1 -->
+	 <!-- 관계차수 => 1:1, 1:N(90% 이상), N:M(0%) -->
+   <!-- 부모 1 -->
+   <resultMap type="memberVO" id="memberMap">
+      <result property="userNo" column="USER_NO"/>
+      <result property="userId" column="USER_ID"/>
+      <result property="userPw" column="USER_PW"/>
+      <result property="userName" column="USER_NAME"/>
+      <result property="coin" column="COIN"/>
+      <result property="regDate" column="REG_DATE"/>
+      <result property="updDate" column="UPD_DATE"/>
+      <result property="enabled" column="ENABLED"/>
+      <collection property="memberAuthVOList" resultMap="memberAuthMap"></collection>
+   </resultMap>
+   
+   <!-- 자식 N -->
+   <resultMap type="memberAuthVO" id="memberAuthMap">
+      <result property="userId" column="USER_ID"/>
+      <result property="auth" column="AUTH"/>
+   </resultMap>
+	
+	
+	<select id="findByEmail" parameterType="String" resultMap="memberMap">
+		SELECT A.USER_NO, A.USER_ID, A.USER_PW, A.USER_NAME, A.COIN
+    			, A.REG_DATE, A.UPD_DATE, A.ENABLED
+     			, B.AUTH
+			FROM   MEMBER A LEFT OUTER JOIN MEMBER_AUTH B ON(A.USER_ID = B.USER_ID)
+			WHERE  A.USER_ID = #{userId}
+	</select>
+	
+</mapper>

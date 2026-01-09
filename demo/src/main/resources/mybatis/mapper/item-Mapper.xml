@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.mapper.ItemMapper">
+	
+	<sql id="where">
+		<if test="keyword != null and keyword != ''">
+    		and (item_name like '%' || #{keyword} || '%' or price like '%'|| #{keyword} ||'%')
+    	</if>
+	</sql>
+	
+	<!-- 
+	   ITEM 테이블에 insert
+	   public int registerPost(ItemVO itemVO)
+	   
+	   ItemVO(itemId=0, itemName=삼성태블릿, price=120000, description=쓸만함
+	      , pictureUrl=/2025/09/08/asdldfksj_개똥이.jpg, uploadFile=파일객체
+    -->
+	
+	<insert id="registerPost" parameterType="kr.or.ddit.vo.ItemVO">
+		<selectKey resultType="int" order="BEFORE" keyProperty="itemId">
+			select NVL(max(item_id), 0) + 1 from item
+		</selectKey>
+			insert into Item (ITEM_ID, ITEM_NAME, PRICE, DESCRIPTION, PICTURE_URL)
+				values(#{itemId}, #{itemName}, #{price}, #{description}, #{pictureUrl})
+	</insert>
+	
+	
+	
+	<!-- 상세보기
+		public itemVO detail(itemVo itemVO)
+		결국은 최상위 부모 (itmeVO)로 리턴
+	 -->	 
+	 <!-- itemVO 1 -->
+	   <resultMap type="itemVO" id="itemMap">
+	      <result property="itemId" column="ITEM_ID"/>
+			<result property="itemName" column="ITEM_NAME"/>
+			<result property="price" column="PRICE"/>
+			<result property="description" column="DESCRIPTION"/>
+			<result property="pictureUrl" column="PICTURE_URL"/>
+			<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+	      <association property="fileGroupVO" resultMap="fileGroupMap"></association>
+	   </resultMap>
+	   
+	   <!-- fileGroupVO 1 -->
+<!-- 	   <resultMap type="fileGroupVO" id="fileGroupMap"> -->
+<!-- 	      <result property="fileGroupNo" column="FILE_GROUP_NO"/> -->
+<!-- 			<result property="fileRegdate" column="FILE_REGDATE"/> -->
+<!-- 	      <collection property="fileDetailVO" resultMap="fileDetailMap"></collection> -->
+<!-- 	   </resultMap> -->
+	   
+	   <!-- fileDetailVO N -->
+<!-- 	   <resultMap type="fileDetailVO" id="fileDetailMap"> -->
+<!-- 	      <result property="fileSn" column="FILE_SN"/> -->
+<!-- 			<result property="fileGroupNo" column="FILE_GROUP_NO"/> -->
+<!-- 			<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/> -->
+<!-- 			<result property="fileSaveName" column="FILE_SAVE_NAME"/> -->
+<!-- 			<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/> -->
+<!-- 			<result property="fileSize" column="FILE_SIZE"/> -->
+<!-- 			<result property="fileExt" column="FILE_EXT"/> -->
+<!-- 			<result property="fileMime" column="FILE_MIME"/> -->
+<!-- 			<result property="fileFancysize" column="FILE_FANCYSIZE"/> -->
+<!-- 			<result property="fileSaveDate" column="FILE_SAVE_DATE"/> -->
+<!-- 			<result property="fileDowncount" column="FILE_DOWNCOUNT"/> -->
+<!-- 	   </resultMap> -->
+	 
+	<select id="detail" parameterType="itemVO" resultMap="itemMap">
+		select  a.item_id, a.item_name, a.price, a.description, a.picture_url, a.file_group_no
+		        , b.FILE_REGDATE
+		        , c.file_sn, c.FILE_ORIGINAL_NAME
+		        , c.FILE_SAVE_NAME, c.FILE_SAVE_LOCATE, c.FILE_SIZE
+		        , c.FILE_EXT, c.FILE_MIME, c.FILE_FANCYSIZE
+		        , c.FILE_SAVE_DATE, c.FILE_DOWNCOUNT
+	    from item a
+	    left outer join file_group b on(a.file_group_no = b.file_group_no)
+	    left outer join file_detail c on(b.file_group_no = c.file_group_no)
+	    where item_id=272
+	</select>
+	
+	<!--
+		MyBatis XML 매퍼에서 SQL 구문 내에 실제 파라미터 바인딩을 할 때는 #{} 를 사용하지만, 
+		<if> 태그의 test 속성은 조건문 평가(OGNL 표현식 평가)를 위한 자바 표현식 언어 영역이기 때문에
+ 		#{} 가 아니라 속성명 그대로 기술해야 합니다. 
+ 	-->
+	<update id="editPost" parameterType="itemVO">
+		update item
+			set ITEM_NAME =#{itemName}, 
+				PRICE = #{price}, 
+				DESCRIPTION =#{description}, 
+				<if test="pictureUrl!=null and pictureUrl!=''">
+					PICTURE_URL=#{pictureUrl}
+				</if>
+				where item_id = #{itemId}
+	</update>
+	
+	<delete id="deletePost" parameterType="kr.or.ddit.vo.ItemVO">
+		delete from item
+			where item_id = #{itemId}
+	</delete>
+	
+	<!-- 상품 목록
+		public List<itemVO> list()
+		map{currentPage=1}
+		
+		sql id='where'
+	 -->
+	
+	<select id="list" parameterType="hashMap" resultType="kr.or.ddit.vo.ItemVO">
+		with t as (select  row_number() over(order by item_id desc) rnum
+	        , item_id
+	        , item_name, price
+	        , description, picture_url
+	    from item
+	    where 1=1
+	    <include refid="where"></include>
+	    )
+	    select t.rnum, t.item_id, t.item_name, t.price, t.description,
+	        t.picture_url
+	        from t
+	        where t.rnum between (#{currentPage}*10)-(10-1) and (#{currentPage}*10)
+	</select>
+	
+	<!-- 페이지네이션 시작 -->
+		<!--  전체 행의 수 -->
+		<select id="getTotal" resultType="int" parameterType="hashMap">
+			select count(*)
+				from item
+				where 1 = 1
+				<include refid="where"></include>
+		</select>
+	
+	<select id="getExamPassFail" resultType="ExamPassFailVO">
+		SELECT SEQ, STUDY_TIME, LIB_INV_CNT, PASS_FAIL
+			FROM   EXAM_PASS_FAIL
+			ORDER BY SEQ
+	</select>
+	
+	<select id="hoichaAmtData" resultType="HoichaAmtDataVO">
+		SELECT ID, HOICHA, AMT 
+			FROM HOICHA_AMT_DATA
+			ORDER BY ID
+	</select>
+	
+	<!-- 이거 기억하기 -->
+	<select id="floodInfo" resultType="kr.or.ddit.vo.FloodInfoVO">
+		select * from FLOOD_INFO
+	</select>
+	
+	<!-- K-means 훈련데이터 준비
+	public List<fianlTestVO) finalTest()
+	
+	테이블을 join 하지 않았지만, FinalTestVO : ClusterDataPoint = 1:1
+	이므로 resultMap을 사용하자
+	 -->
+	<!-- 1 -->
+   <resultMap type="finalTestVO" id="finalTestMap">
+      <result property="studentId" column="STUDENT_ID"/>
+      <result property="studentName" column="STUDENT_NAME"/>
+      <result property="koreanScore" column="KOREAN_SCORE"/>
+      <result property="englishScore" column="ENGLISH_SCORE"/>
+      <result property="mathScore" column="MATH_SCORE"/>
+      <result property="scienceScore" column="SCIENCE_SCORE"/>
+      <result property="historyKr" column="HISTORY_KR"/>
+      <result property="historyWorld" column="HISTORY_WORLD"/>
+      <result property="colx" column="COLX"/>
+      <result property="coly" column="COLY"/>
+   </resultMap>
+   <!-- kr.or.ddit.vo패키지에 없으므로 alias처리가 안됨 -->
+   
+   <!-- K-means 훈련데이터 준비
+   public List<FinalTestVO> finalTest()
+   
+   테이블 JOIN은 사용하지 않았지만 FinalTestVO : ClusterDataPoint = 1 : 1
+   이므로 resultMap을 사용하자
+    -->
+   <select id="finalTest" resultMap="finalTestMap">
+      SELECT STUDENT_ID, STUDENT_NAME
+           , KOREAN_SCORE, ENGLISH_SCORE
+           , MATH_SCORE, SCIENCE_SCORE
+           , HISTORY_KR, HISTORY_WORLD
+           , ((KOREAN_SCORE + ENGLISH_SCORE)*2 + HISTORY_KR + HISTORY_WORLD) COLX
+           , (MATH_SCORE + SCIENCE_SCORE) COLY
+      FROM   FINAL_TEST
+      ORDER BY 1
+   </select>
+
+	<select id="utility" resultType="kr.or.ddit.vo.UtilityVO">
+		SELECT *
+			FROM UTILITY
+	</select>
+	
+	<!-- FINAL_TEST : FILE_GROUP = 1 : 1 
+	1:1 연결에는 association
+	-->
+   <resultMap type="finalTestVO" id="getfinalTestMap">
+      <result property="studentId" column="STUDENT_ID"/>
+      <result property="studentName" column="STUDENT_NAME"/>
+      <result property="koreanScore" column="KOREAN_SCORE"/>
+      <result property="englishScore" column="ENGLISH_SCORE"/>
+      <result property="mathScore" column="MATH_SCORE"/>
+      <result property="scienceScore" column="SCIENCE_SCORE"/>
+      <result property="historyKr" column="HISTORY_KR"/>
+      <result property="historyWorld" column="HISTORY_WORLD"/>
+      <result property="fileGroupNo" column="FILE_GROUP_NO"/>
+      <association property="fileGroupVO" resultMap="fileGroupMap"></association>
+   </resultMap>
+   
+   <!-- FILE_GROUP : FILE_DETAIL = 1 : N
+   1:N 연결에는 collection 
+   -->
+   <resultMap type="fileGroupVO" id="fileGroupMap">
+      <result property="fileGroupNo" column="FILE_GROUP_NO"/>
+      <result property="fileRegdate" column="FILE_REGDATE"/>
+      <collection property="fileDetailVOList" resultMap="fileDetailMap"></collection>
+   </resultMap>
+   
+   <resultMap type="fileDetailVO" id="fileDetailMap">
+      <result property="fileSn" column="FILE_SN"/>
+      <result property="fileGroupNo" column="FILE_GROUP_NO"/>
+      <result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+      <result property="fileSaveName" column="FILE_SAVE_NAME"/>
+      <result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+      <result property="fileSize" column="FILE_SIZE"/>
+      <result property="fileExt" column="FILE_EXT"/>
+      <result property="fileMime" column="FILE_MIME"/>
+      <result property="fileFancysize" column="FILE_FANCYSIZE"/>
+      <result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+      <result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+   </resultMap>
+	
+	<select id="getFinalTest" parameterType="kr.or.ddit.vo.FinalTestVO" resultMap="getfinalTestMap">
+		SELECT FT.STUDENT_ID, FT.STUDENT_NAME, FT.KOREAN_SCORE, FT.ENGLISH_SCORE, FT.MATH_SCORE
+		     , FT.SCIENCE_SCORE, FT.HISTORY_KR, FT.HISTORY_WORLD, FT.FILE_GROUP_NO
+		     , FG.FILE_REGDATE
+		     , FD.FILE_SN, FD.FILE_ORIGINAL_NAME
+		     , FD.FILE_SAVE_NAME, FD.FILE_SAVE_LOCATE, FD.FILE_SIZE
+		     , FD.FILE_EXT, FILE_MIME, FD.FILE_FANCYSIZE, FD.FILE_SAVE_DATE
+		     , FD.FILE_DOWNCOUNT
+			FROM   FINAL_TEST FT
+			left outer JOIN FILE_GROUP FG ON(FT.FILE_GROUP_NO=FG.FILE_GROUP_NO)
+			left outer JOIN FILE_DETAIL FD ON(FG.FILE_GROUP_NO=FD.FILE_GROUP_NO)
+			WHERE  FT.STUDENT_ID = #{studentId}
+	</select>
+	
+	<!-- 1. FILE_GROUP 테이블에 insert(1회 실행)
+	   public int insertFileGroup(FileGroupVO fileGroupVO)
+	   
+	   실행전 fileGroupVO{fileGroupNo=0,fileRegdate=null)
+	   실행후 fileGroupVO{fileGroupNo=20250226004,fileRegdate=null) 왜냐하면 selectKey에 의해서..
+    -->
+	<insert id="insertFileGroup" parameterType="FileGroupVO">
+		<selectKey resultType="long" order="BEFORE" keyProperty="fileGroupNo">
+			SELECT NVL(max(file_group_no)+1, to_char(sysdate, 'YYYYMMDD')||'001') 
+				FROM FILE_GROUP
+				WHERE substr(FILE_GROUP_NO, 1, 8) = TO_CHAR(SYSDATE, 'YYYYMMDD')
+		</selectKey>
+		
+		INSERT INTO FILE_GROUP
+			VALUES (#{fileGroupNo}, SYSDATE)
+	</insert>
+	
+	<!-- FILE_DETAIL 테이블에 insert 
+   FILE_DETAIL 테이블에 insert
+   public int insertFileDetail(FileDetailVO fileDetailVO)-->
+   <insert id="insertFileDetail" parameterType="kr.or.ddit.vo.FileDetailVO">
+      <!-- 
+      FILE_DETAIL 테이블의 마지막 FILE_SN 값 + 1을 구하기
+      단, FILE_SN는 주어진 FILE_GROUP_NO의 값을 조건으로 하기
+      단, FILE_SN 값이 NULL이면 NULL처리하기
+      파일을 업로드 했고, 오늘 첫번째 그룹으로써 업로드 함
+      상세 테이블에는 3개의 파일이 있더라
+      SELECT NVL(MAX(FILE_SN),0) + 1
+      FROM   FILE_DETAIL
+      WHERE  FILE_GROUP_NO = '20250619001';
+       -->
+      <selectKey resultType="int" order="BEFORE" keyProperty="fileSn">
+      	SELECT NVL(MAX(FILE_SN),0) + 1
+      		FROM   FILE_DETAIL
+      		WHERE  FILE_GROUP_NO = #{fileGroupNo}
+      </selectKey>
+   
+      INSERT INTO FILE_DETAIL(FILE_SN, FILE_GROUP_NO, FILE_ORIGINAL_NAME, FILE_SAVE_NAME, FILE_SAVE_LOCATE
+            , FILE_SIZE, FILE_EXT, FILE_MIME, FILE_FANCYSIZE, FILE_SAVE_DATE
+            , FILE_DOWNCOUNT)
+      VALUES(#{fileSn},#{fileGroupNo},#{fileOriginalName},#{fileSaveName},#{fileSaveLocate}
+           ,#{fileSize},#{fileExt},#{fileMime},#{fileFancysize},SYSDATE
+           ,#{fileDowncount})
+   </insert>
+   
+   <!-- FINAL_TEST 테이블의 FILE_GROUP_NO 값 보정
+   public int updateFinalTest(FinalTestVO finalTestVO) -->
+   <update id="updateFinalTest" parameterType="finalTestVO">
+      UPDATE FINAL_TEST
+      SET    STUDENT_NAME = #{studentName}
+          , KOREAN_SCORE = #{koreanScore}
+          , ENGLISH_SCORE = #{englishScore}
+          , MATH_SCORE = #{mathScore}
+          , SCIENCE_SCORE = #{scienceScore}
+          , HISTORY_KR = #{historyKr}
+          , HISTORY_WORLD = #{historyWorld}
+          <if test="fileGroupNo!=null and fileGroupNo!=0">
+             , FILE_GROUP_NO = #{fileGroupNo}
+          </if>
+      WHERE  STUDENT_ID = #{studentId}
+   </update>
+   
+   <!-- delete 수행
+   public int deleteFinalTest(FinalTestVO finalTestVO) 
+   
+   FinalTestVO(studentId=1, studentName=null, koreanScore=0,  ...
+   -->
+   <delete id="deleteFinalTest" parameterType="finalTestVO">
+      DELETE FROM FINAL_TEST
+      WHERE  STUDENT_ID = #{studentId}
+   </delete>
+   
+   <update id="editPostAjax" parameterType="itemVO">
+   		update item
+   			set ITEM_NAME =#{itemName}
+   				, PRICE = #{price}
+   				, DESCRIPTION=#{description}
+   			<if test="fileGroupNo!=null and fileGroupNo!=0">
+             , FILE_GROUP_NO = #{fileGroupNo}
+          	</if>
+		where ITEM_ID=#{itemId}
+   </update>
+</mapper>

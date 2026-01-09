@@ -1,0 +1,13 @@
+content_assist_lru_history=<?xml version\="1.0" encoding\="UTF-8" standalone\="no"?><history maxLHS\="100" maxRHS\="10"><lhs name\="java.util.Map"><rhs name\="java.util.HashMap"/></lhs><lhs name\="kr.or.ddit.vo.CcpyDtaVO"><rhs name\="kr.or.ddit.vo.CcpyDtaVO"/></lhs><lhs name\="java.util.SequencedCollection"><rhs name\="java.util.ArrayList"/></lhs><lhs name\="java.util.Collection"><rhs name\="java.util.ArrayList"/></lhs><lhs name\="java.lang.Iterable"><rhs name\="java.util.ArrayList"/></lhs><lhs name\="java.util.List"><rhs name\="java.util.ArrayList"/></lhs><lhs name\="java.io.InputStream"><rhs name\="java.io.FileInputStream"/></lhs><lhs name\="java.io.Closeable"><rhs name\="java.io.FileInputStream"/></lhs><lhs name\="java.lang.AutoCloseable"><rhs name\="java.io.FileInputStream"/></lhs><lhs name\="java.io.FileInputStream"><rhs name\="java.io.FileInputStream"/></lhs><lhs name\="org.springframework.http.HttpEntity"><rhs name\="org.springframework.http.ResponseEntity"/></lhs><lhs name\="org.springframework.http.ResponseEntity"><rhs name\="org.springframework.http.ResponseEntity"/></lhs><lhs name\="java.lang.Exception"><rhs name\="java.io.IOException"/></lhs><lhs name\="java.lang.Throwable"><rhs name\="java.io.IOException"/></lhs><lhs name\="java.io.IOException"><rhs name\="java.io.IOException"/></lhs><lhs name\="kr.or.ddit.vo.BidPblancVO"><rhs name\="kr.or.ddit.vo.BidPblancVO"/></lhs><lhs name\="kr.or.ddit.vo.BdderVO"><rhs name\="kr.or.ddit.vo.BdderVO"/></lhs><lhs name\="kr.or.ddit.vo.BkmkSanctnlnVO"><rhs name\="kr.or.ddit.vo.BkmkSanctnlnVO"/></lhs><lhs name\="kr.or.ddit.vo.DrftDocVO"><rhs name\="kr.or.ddit.vo.DrftDocVO"/></lhs><lhs name\="kr.or.ddit.vo.EmpVO"><rhs name\="kr.or.ddit.vo.EmpVO"/></lhs><lhs name\="kr.or.ddit.vo.SanctnlnVO"><rhs name\="kr.or.ddit.vo.SanctnlnVO"/></lhs><lhs name\="kr.or.ddit.vo.ElctrnsanctnVO"><rhs name\="kr.or.ddit.vo.ElctrnsanctnVO"/></lhs></history>
+content_assist_number_of_computers=15
+content_assist_proposals_background=255,255,255
+content_assist_proposals_foreground=0,0,0
+eclipse.preferences.version=1
+markOccurrences=false
+org.eclipse.jdt.internal.ui.navigator.layout=2
+org.eclipse.jdt.internal.ui.navigator.librariesnode=true
+org.eclipse.jdt.ui.formatterprofiles.version=23
+spelling_locale_initialized=true
+typefilter_migrated_2=true
+useAnnotationsPrefPage=true
+useQuickDiffPrefPage=true

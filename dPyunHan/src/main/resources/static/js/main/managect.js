@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function () {
+(function () {document.addEventListener("DOMContentLoaded", function () {
   const searchForm = document.querySelector(".manage-wrapper form");
   if (!searchForm) return;
 
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
       e.preventDefault();
       doSearch(ymInput.value); // 선택한 달 기준 조회
     });
-  }
+	}
 
   // =========================
   // 페이지 로드 시 자동 조회 (저번달 + 이번달)
@@ -278,3 +278,4 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 });
+})();

@@ -141,6 +141,7 @@
 		WHERE APTCMPL = #{aptcmpl} AND HO = #{ho} AND RESIDESTTUS = #{residesttus})
 		)
 	</insert>
+	
 	<!-- 회원 정보 수정 -->
 <update id="updateMember" parameterType="kr.or.ddit.vo.MberVO">
     UPDATE MBER

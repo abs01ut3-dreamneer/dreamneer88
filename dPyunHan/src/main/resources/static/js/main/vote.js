@@ -103,8 +103,8 @@ function renderModal(iem) {
     <tr>
 	<tr ${myVoteIemNo === i.voteIemNo ? 'style="background-color:#e8f5e9 !important;"': ''}>
       <td>${i.voteIemNo}</td>
-      <td>${i.iemNm}</td>
-      <td>${i.iemCn}</td>
+      <td style="text-align:left;">${i.iemNm}</td>
+      
 	  <td>
 	       <input type="radio" name="voteIemNo" value="${i.voteIemNo}"
 	        ${myVoteIemNo === i.voteIemNo ? "checked" : ""}>
@@ -164,7 +164,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 // 확인 눌렀을 때 실제 폼 제출
                 voteForm.submit();
 
-                // 선택 사항: 잠깐 로딩 메시지
+                // 로딩 메시지
                 Swal.fire({
                     title: "투표 중입니다...",
                     icon: "info",

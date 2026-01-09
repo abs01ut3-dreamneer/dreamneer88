@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item key="hasShownOverlayPopupBefore" value="true"/>
+	<section name="java.lang.Class">
+		<item key="replaceBarOpen" value="true"/>
+		<item key="wrap" value="true"/>
+		<item key="casesensitive" value="false"/>
+		<item key="wholeword" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="isRegEx" value="false"/>
+		<list key="findhistory">
+			<item value="card-"/>
+			<item value="re"/>
+			<item value="referer"/>
+			<item value="submitBtn"/>
+			<item value="pdf"/>
+			<item value="큐"/>
+			<item value="lottie"/>
+			<item value="getbk"/>
+			<item value="getTotal"/>
+			<item value="sitename"/>
+			<item value="jsou"/>
+			<item value="Home"/>
+			<item value="empVO"/>
+			<item value="postBkmkSanctnlnDetail"/>
+			<item value="uploadController"/>
+		</list>
+		<list key="replacehistory">
+			<item value="uploadService"/>
+			<item value="D_"/>
+			<item value="S_"/>
+			<item value="simpleDeptVOMap"/>
+			<item value="simpleEmpVOMap"/>
+			<item value="ccpyManageService"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="327"/>
+		<item key="DIALOG_Y_ORIGIN" value="268"/>
+		<item key="DIALOG_WIDTH" value="322"/>
+		<item key="DIALOG_HEIGHT" value="391"/>
+		<item key="DIALOG_FONT_NAME" value="1|맑은 고딕|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕"/>
+	</section>
+</section>

@@ -300,7 +300,8 @@ document.addEventListener("DOMContentLoaded", function() {
 					stroke: "#f59e0b",
 					width: 3,
 					dash: [8, 3],
-					points: { show: false }
+					points: { show: false },
+                    drawStyle: 1
 				},
 				{
 					label: "미래 예측",

@@ -1,0 +1,6 @@
+package kr.or.ddit.vo;
+
+@Data
+public class BidSearchVO {
+
+}

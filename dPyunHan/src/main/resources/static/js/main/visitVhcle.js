@@ -275,7 +275,6 @@ document.addEventListener("DOMContentLoaded", function() {
             });
         };
     }
-
     // ------------------------------
     // URL 파라미터로 모달 자동오픈 (유지)
     // ------------------------------

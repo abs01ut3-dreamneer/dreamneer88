@@ -294,11 +294,6 @@
 }
 
 /* ---------------------- 3단 그리드 ---------------------- */
-.resve-grid {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-}
 
 /* ---------------------- 공통 버튼 스타일 ---------------------- */
 .time-slot,
@@ -411,14 +406,15 @@
 /* 구분선 */
 /* 첫 번째 칼럼과 두 번째 칼럼 사이 */
 .resve-grid {
-    position: relative;
+    position: relative !important;
     display: flex;
-    justify-content: space-between;
     gap: 12px;
     position: relative;
     align-items: stretch;
     flex-wrap: nowrap !important;
     flex-direction: row !important;
+    justify-content: space-between !important;
+    min-height: 1px !important;
 }
 
 .grid-left { width: 40%; }
@@ -454,7 +450,7 @@
     position: absolute;
     top: 0;
     bottom: 0;
-    left: calc(40% - 5px);
+    left: 39%;
     width: 2px;
     background: #d3d3d3;
 }
@@ -600,7 +596,7 @@
 
     /* 두 번째 구분선: +3px 이동 */
     .resve-grid::after {
-        left: calc(70% + 5px) !important;
+        left: calc(70% + 6px) !important;
     }
 }
 
@@ -632,4 +628,12 @@
 .info-row > div:first-child {
     margin-left: auto;
     text-align: right;
+}
+
+.resve-grid::before,
+.resve-grid::after {
+    z-index: 999 !important;
+    display: block !important;
+    top: 0;
+    bottom: 0;
 }

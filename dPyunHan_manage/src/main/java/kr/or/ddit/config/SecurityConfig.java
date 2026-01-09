@@ -129,14 +129,7 @@ public class SecurityConfig {
             .requestCache(cache -> cache.requestCache(new HttpSessionRequestCache()))
             .exceptionHandling(exceptionHandling -> exceptionHandling //권한이 없을때
                    .authenticationEntryPoint((request, response, authException) -> {
-                	   String requestURI = request.getRequestURI();
-                       System.out.println("========================================");
-                       System.out.println("인증 예외 발생!");
-                       System.out.println("요청 URI: " + requestURI);
-                       System.out.println("쿼리 스트링: " + request.getQueryString());
-                       System.out.println("예외 메시지: " + authException.getMessage());
-                       System.out.println("========================================");
-                       System.out.println("인증 예외 요청 URI: " + requestURI);                       
+                	   String requestURI = request.getRequestURI();                                         
                        if (requestURI.startsWith("/bdder/postBdder")) {
                            // 협력업체 로그인
                            response.sendRedirect("/ccpyManage/loginCcpyManage");

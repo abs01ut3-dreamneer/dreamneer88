@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.mapper.ProductMapper">
+
+	<select id="products" resultType="ProductVO">
+		select *
+			from product
+			order by 1
+	</select>
+	
+	<!-- 
+		상품 상세
+  		들어옴: productVO{productId=P1234,pname=null,description=null...}
+  		나감: productVO{productId=P1234,pname=개똥이폰,description=개똥개똥...}
+    -->
+	<select id="product" parameterType="productVO" resultType="productVO">
+		select *
+			from product
+			where product_id=#{productId}
+	</select>
+	
+	<!--
+		상품 등록
+		productVO{productId=p1234,..}
+		or
+		map{productId=p1234,...} => parameterType="hashMap"
+		
+		I/U/D 태그의 경우 resultType은 생략해야함
+	 -->
+	<insert id="processAddProduct" parameterType="ProductVO">
+		<selectKey resultType="String" order="BEFORE" keyProperty="productId">
+			select substr(max(product_id),1,1)||trim(substr(max(product_id),2)+1)
+    		from product
+		</selectKey>
+	insert into product (PRODUCT_ID, PNAME, UNIT_PRICE, DESCRIPTION, MANUFACTURER, 
+			CATEGORY, UNITS_IN_STOCK, CONDITION, FILENAME, QUANTITY)
+		values(#{productId},#{pname},#{unitPrice},#{description},#{manufacturer},
+			#{category},#{unitsInStock},#{condition},NULL,0)
+	</insert>
+</mapper>

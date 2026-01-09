@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<item key="HistoryTableProvider.SVNHistoryPage.Revision" value="58"/>
+	<item key="HistoryTableProvider.SVNHistoryPage.Date" value="143"/>
+	<item key="HistoryTableProvider.SVNHistoryPage.Author" value="114"/>
+	<item key="HistoryTableProvider.SVNHistoryPage.Comment" value="285"/>
+	<item key="CommitDialog.location.x" value="0"/>
+	<item key="CommitDialog.location.y" value="0"/>
+	<item key="CommitDialog.size.x" value="1536"/>
+	<item key="CommitDialog.size.y" value="824"/>
+	<item key="CommitDialog.weights.0" value="500"/>
+	<item key="CommitDialog.weights.1" value="500"/>
+	<item key="HistoryTableProvider.revisions.Revision" value="101"/>
+	<item key="HistoryTableProvider.revisions.Date" value="252"/>
+	<item key="HistoryTableProvider.revisions.Author" value="201"/>
+	<item key="HistoryTableProvider.revisions.Comment" value="503"/>
+	<item key="HistoryTableProvider.revisionsBlock.Revision" value="101"/>
+	<item key="HistoryTableProvider.revisionsBlock.Date" value="252"/>
+	<item key="HistoryTableProvider.revisionsBlock.Author" value="201"/>
+	<item key="HistoryTableProvider.revisionsBlock.Comment" value="503"/>
+	<item key="HistoryTableProvider.MergeWizardUnblockRevisionsPage.Revision" value="102"/>
+	<item key="HistoryTableProvider.MergeWizardUnblockRevisionsPage.Date" value="252"/>
+	<item key="HistoryTableProvider.MergeWizardUnblockRevisionsPage.Author" value="202"/>
+	<item key="HistoryTableProvider.MergeWizardUnblockRevisionsPage.Comment" value="505"/>
+	<section name="NewLocationWizard">
+		<list key="ConfigurationWizardMainPage.STORE_URL_ID">
+			<item value="http://112.220.114.130:10001/svn/projects/202505F/team2"/>
+		</list>
+		<section name="NewLocationWizard.dialogBounds">
+			<item key="DIALOG_X_ORIGIN" value="250"/>
+			<item key="DIALOG_Y_ORIGIN" value="128"/>
+			<item key="DIALOG_WIDTH" value="525"/>
+			<item key="DIALOG_HEIGHT" value="385"/>
+			<item key="DIALOG_FONT_NAME" value="1|맑은 고딕|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|맑은 고딕"/>
+		</section>
+	</section>
+	<section name="CommitWizard">
+		<item key="VWeight1" value="500"/>
+		<item key="VWeight2" value="500"/>
+		<item key="ShowCompare" value="false"/>
+	</section>
+</section>

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.or.ddit.mapper.Item2Mapper">
+	<!-- 
+		1. select 1 개 where itemId
+		2. select 리스트로받기
+		3. insert
+		4. update
+		5. delete
+	 -->
+	<sql id="where">
+		<if test="keyword != null and keyword != ''">
+    		and (item_name like '%' || #{keyword} || '%' or price like '%'|| #{keyword} ||'%')
+    	</if>
+	</sql>
+	
+	<!-- 
+	   ITEM 테이블에 insert
+	   public int registerPost(Item2VO item2VO)
+	   
+	   Item2VO(itemId=0, itemName=삼성태블릿, price=120000, description=쓸만함
+	      , pictureUrl=/2025/09/08/asdldfksj_개똥이.jpg, uploadFile=파일객체
+    -->
+	
+	<insert id="registerPost" parameterType="kr.or.ddit.vo.Item2VO">
+		<selectKey resultType="int" order="BEFORE" keyProperty="itemId">
+			select NVL(max(item_id), 0) + 1 from item2
+		</selectKey>
+			insert into Item2 (ITEM_ID, ITEM_NAME, PRICE, DESCRIPTION, PICTURE_URL, PICTURE_URL2)
+				values(#{itemId}, #{itemName}, #{price}, #{description}, #{pictureUrl}, #{pictureUrl2})
+	</insert>
+	
+	<!-- Item2VO 1 -->
+	<resultMap type="kr.or.ddit.vo.Item2VO" id="item2VOMap">
+		<result property="itemId" column="ITEM_ID"/>
+		<result property="itemName" column="ITEM_NAME"/>
+		<result property="price" column="PRICE"/>
+		<result property="description" column="DESCRIPTION"/>
+		<result property="pictureUrl" column="PICTURE_URL"/>
+		<result property="pictureUrl2" column="PICTURE_URL2"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="parentItemId" column="PARENT_ITEM_ID"/>
+		<result property="writer" column="writer"/>
+		<association property="fileGroupVO" resultMap="fileGroupMap"></association>
+		<collection property="item2VOList" resultMap="item2VOChildMap"></collection>
+	</resultMap>
+	
+	<!-- ITEM2VO N -->
+	<resultMap type="kr.or.ddit.vo.Item2VO" id="item2VOChildMap">
+		<result property="itemId" column="ITEM_ID2"/>
+		<result property="itemName" column="ITEM_NAME2"/>
+		<result property="price" column="PRICE2"/>
+		<result property="description" column="DESCRIPTION2"/>
+		<result property="pictureUrl" column="PICTURE_URL2"/>
+		<result property="pictureUrl2" column="PICTURE_URL22"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO2"/>
+		<result property="parentItemId" column="PARENT_ITEM_ID2"/>
+		<result property="writer" column="writer2"/>
+	</resultMap>
+	
+	<!-- FileGroup 1 -->
+	<resultMap type="kr.or.ddit.vo.FileGroupVO" id="fileGroupMap">
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileRegdate" column="FILE_REGDATE"/>
+		<collection property="fileDetailVOList" resultMap="fileDetailVOMap"></collection>
+	</resultMap>
+	<!-- FileDetail N -->
+	<resultMap type="kr.or.ddit.vo.FileDetailVO" id="fileDetailVOMap">
+		<result property="fileSn" column="FILE_SN"/>
+		<result property="fileGroupNo" column="FILE_GROUP_NO"/>
+		<result property="fileOriginalName" column="FILE_ORIGINAL_NAME"/>
+		<result property="fileSaveName" column="FILE_SAVE_NAME"/>
+		<result property="fileSaveLocate" column="FILE_SAVE_LOCATE"/>
+		<result property="fileSize" column="FILE_SIZE"/>
+		<result property="fileExt" column="FILE_EXT"/>
+		<result property="fileMime" column="FILE_MIME"/>
+		<result property="fileFancysize" column="FILE_FANCYSIZE"/>
+		<result property="fileSaveDate" column="FILE_SAVE_DATE"/>
+		<result property="fileDowncount" column="FILE_DOWNCOUNT"/>
+	</resultMap>
+	
+	<select id="detail" parameterType="item2VO" resultMap="item2VOMap">		
+		SELECT
+		    a.item_id, 
+		    a.item_name,
+		    a.price,
+		    a.description,
+		    a.picture_url,
+		    a.picture_url2,
+		    a.file_group_no as file_group_no,        -- 부모용 alias!
+		    a.parent_item_id as parent_item_id,
+		    a.writer as writer,
+		    d.item_id as item_id2,                   -- 자식용 alias!
+		    d.item_name as item_name2,
+		    d.price as price2,
+		    d.description as description2,
+		    d.picture_url as picture_url2,           -- 자식용 alias!
+		    d.picture_url2 as picture_url22,
+		    d.file_group_no as file_group_no2,       -- 자식용 alias!
+		    d.parent_item_id as parent_item_id2,
+		    d.writer as writer2,
+		    b.file_regdate,
+		    c.file_sn,
+		    c.file_original_name,
+		    c.file_save_name,
+		    c.file_save_locate,
+		    c.file_size,
+		    c.file_ext,
+		    c.file_mime,
+		    c.file_fancysize,
+		    c.file_save_date,
+		    c.file_downcount
+		FROM item2 a
+		    LEFT OUTER JOIN item2 d ON (a.item_id = d.parent_item_id)
+		    LEFT OUTER JOIN file_group b ON (a.file_group_no = b.file_group_no)
+		    LEFT OUTER JOIN file_detail c ON (b.file_group_no = c.file_group_no)
+		WHERE a.item_id = #{itemId}
+		order by d.item_id desc
+	</select>
+	
+	<!--
+		MyBatis XML 매퍼에서 SQL 구문 내에 실제 파라미터 바인딩을 할 때는 #{} 를 사용하지만, 
+		<if> 태그의 test 속성은 조건문 평가(OGNL 표현식 평가)를 위한 자바 표현식 언어 영역이기 때문에
+ 		#{} 가 아니라 속성명 그대로 기술해야 합니다. 
+ 	-->
+	<update id="editPost" parameterType="item2VO">
+		update item2
+			set ITEM_NAME =#{itemName} 
+				, PRICE = #{price} 
+				, DESCRIPTION =#{description} 
+				<if test="pictureUrl!=null and pictureUrl!=''">
+					, PICTURE_URL=#{pictureUrl}
+				</if>
+				<if test="pictureUrl2!=null and pictureUrl2!=''">
+				 	, PICTURE_URL2=#{pictureUrl2}
+				</if>
+				where item_id = #{itemId}
+	</update>
+	
+	<delete id="deletePost" parameterType="kr.or.ddit.vo.Item2VO">
+		delete from item2
+			where item_id = #{itemId}
+	</delete>
+	
+	<!-- 상품 목록
+		public List<item2VO> list()
+		map{currentPage=1}
+		
+		sql id='where'
+	 -->
+	
+	<select id="list" parameterType="hashMap" resultType="kr.or.ddit.vo.Item2VO">
+		WITH T AS(
+		    SELECT ROWNUM RNUM
+		         , F.ITEM_ID, F.ITEM_NAME, F.PRICE, F.DESCRIPTION, F.PICTURE_URL
+		         , F.PICTURE_URL2, F.FILE_GROUP_NO, F.PARENT_ITEM_ID
+		         , F.LVL
+		    FROM
+		    (
+		        SELECT ITEM_ID, ITEM_NAME, PRICE, DESCRIPTION, PICTURE_URL
+		             , PICTURE_URL2, FILE_GROUP_NO, PARENT_ITEM_ID
+		             , LEVEL LVL
+		        FROM   ITEM2
+		        where 1=1
+	   		    START WITH PARENT_ITEM_ID IS NULL
+		        <include refid="where"></include>
+		        CONNECT BY PRIOR ITEM_ID = PARENT_ITEM_ID
+		    ) F
+		)
+		SELECT * FROM T
+		WHERE T.RNUM BETWEEN (#{currentPage}*10)-(10-1) and (#{currentPage}*10)				
+	</select>
+	
+	<!-- 페이지네이션 시작 -->
+		<!--  전체 행의 수 -->
+		<select id="getTotal" resultType="int" parameterType="hashMap">
+			select count(*)
+				from item2
+				where 1 = 1
+				<include refid="where"></include>
+		</select>
+	
+	<!-- update -->
+	<update id="editPostAjax" parameterType="kr.or.ddit.vo.Item2VO">
+		update item2
+			set ITEM_NAME =#{itemName} 
+				, PRICE = #{price} 
+				, DESCRIPTION =#{description}
+				<if test="pictureUrl!=null and pictureUrl!=''">
+					, PICTURE_URL=#{pictureUrl}
+				</if>
+				<if test="pictureUrl2!=null and pictureUrl2!=''">
+				 	, PICTURE_URL2=#{pictureUrl2}
+				</if>
+				<if test="fileGroupNo!=null and fileGroupNo!=''">
+					, FILE_GROUP_NO=#{fileGroupNo}
+				</if>
+				where item_id = #{itemId}
+	</update>
+	
+	<insert id="createPostAjax" parameterType="Item2VO">
+		<selectKey resultType="int" order="BEFORE" keyProperty="itemId">
+			select NVL(max(item_id), 0) + 1 from item2
+		</selectKey>
+			insert into Item2 (ITEM_ID, ITEM_NAME, PARENT_ITEM_ID, writer)
+				values(#{itemId}, #{itemName}, #{parentItemId}, #{writer})
+	</insert>
+	
+</mapper>

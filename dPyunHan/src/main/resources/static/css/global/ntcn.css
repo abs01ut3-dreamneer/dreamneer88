@@ -34,9 +34,10 @@
 
 /* 메시지(토스트 안에서만) */
 .swal2-toast-custom .swal2-html-container {
-    font-size: 13px !important;
+    font-size: 12px !important;
     margin: 0 !important;
     padding: 0 !important;
+    line-height: 1.2 !important;
 }
 
 .swal2-toast-custom .swal2-title,

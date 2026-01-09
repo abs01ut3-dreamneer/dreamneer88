@@ -25,10 +25,14 @@
 	</delete>
 	
 	<!-- public List<BbsGroupVO> bbsGroupList(); -->
-	<select id="bbsGroupList" resultType="bbsGroupVO">
-	    SELECT BBS_GROUP_SN, BBS_NM, ANSWER_AT, ATCH_FILE_AT, MBER_ID, BBS_NM
-	    FROM BBS_GROUP
-	    ORDER BY BBS_GROUP_SN ASC
+	<select id="bbsGroupList" resultType="hashMap">
+	    SELECT BG.BBS_GROUP_SN, BG.BBS_NM, BG.ANSWER_AT, BG.ATCH_FILE_AT, BG.MBER_ID,
+	           (SELECT COUNT(*) FROM BBS_DETAIL WHERE BBS_GROUP_SN = BG.BBS_GROUP_SN) AS POST_COUNT,
+	           (SELECT COUNT(*) FROM ANSWER WHERE BBS_DETAIL_NO IN
+	               (SELECT BBS_DETAIL_NO FROM BBS_DETAIL WHERE BBS_GROUP_SN = BG.BBS_GROUP_SN)
+	           ) AS COMMENT_COUNT
+	    FROM BBS_GROUP BG
+	    ORDER BY BG.BBS_GROUP_SN ASC
 	</select>
 	
 	<!-- public int register(BbsDetailVO bbsDetailVO); -->
