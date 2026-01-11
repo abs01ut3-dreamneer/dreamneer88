@@ -42,16 +42,6 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 			targetUrl = "/bidPblanc/getBidPblancList"; 
 		}
 
-		
-		//특정 페이지로 리다이렉트
-//		response.sendRedirect("/notice/list");
-		
-		// reqeustCache : 세션에 저장되어 있는 로그인 전 요청 객체
-		//                               요청을 get(요청객체, 응답객체)
-	    // savedRequest : 사용자가 인증 없이 접근했던 URL(/product/addProduct)이 여기에 저장되어 있음
-		SavedRequest savedRequest = requestCache.getRequest(request, response);
-		log.info("savedRequest: {}", savedRequest);  // ✅ 디버깅
-		
 		// 1. SavedRequest 우선
 	    if(savedRequest != null) {
 	        String redirectUrl = savedRequest.getRedirectUrl();
