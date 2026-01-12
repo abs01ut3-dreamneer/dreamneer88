@@ -82,10 +82,8 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 		elctrnsanctnVO.setFileGroupSn(finalFileGroupSn);
 		
 		if (finalFileGroupSn > 0) {
-			List<FileDetailVO> committedFiles = this.uploadService.getFileDetailVOList(finalFileGroupSn);
-			
-		}
-		
+			List<FileDetailVO> committedFiles = this.uploadService.getFileDetailVOList(finalFileGroupSn);			
+		}		
 		return this.elctrncsanctnMapper.postElctrnsanctn(elctrnsanctnVO);
 	}
 
@@ -104,13 +102,11 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 			bkmkSanctnlnDetailVO.setBkmkSanctnlnId(bkmkSanctnlnVO.getBkmkSanctnlnId());
 			this.elctrncsanctnMapper.postBkmkSanctnlnDetail(bkmkSanctnlnDetailVO);
 		}
-
 		for (BkmkSanctnlnDetailVO bkmkSanctnlnDetailVO : bkmkSanctnlnDataVO.getDrftRefrnList()) {
 			bkmkSanctnlnDetailVO.setBkmkSanctnlnId(bkmkSanctnlnVO.getBkmkSanctnlnId());
 			bkmkSanctnlnDetailVO.setDrftRefrnAt(1);
 			this.elctrncsanctnMapper.postBkmkSanctnlnDetail(bkmkSanctnlnDetailVO);
 		}
-
 		return result;
 	}
 
@@ -152,8 +148,7 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        return 0;
-	    }
-	    
+	    }	    
 	    return result;
 	}
 
@@ -174,9 +169,6 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 	        this.elctrncsanctnMapper.postDrftRefrn(vo);
 	    });
 	}
-
-	
-	
 
 	// 페이지네이션
 	@Override
@@ -222,10 +214,8 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 		}
 
 		elctrnsanctnVO.setDrftRefrnVOList(drftRefrnVOList);
-
 		EmpVO empVO = this.elctrncsanctnMapper.getEmp(elctrnsanctnVO.getEmpId());
 		elctrnsanctnVO.setEmpVO(empVO);
-
 		return elctrnsanctnVO;
 	}
 
@@ -236,13 +226,11 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 			EmpVO empVO = this.elctrncsanctnMapper.getEmp(elctrnsanctnVO.getEmpId());
 			elctrnsanctnVO.setEmpVO(empVO);
 		}
-
 		return elctrnsanctnVOList;
 	}
 
 	@Override
 	public int getTotalRcpt(Map<String, Object> mapRcpt) {
-
 		return this.elctrncsanctnMapper.getTotalRcpt(mapRcpt);
 	}
 
@@ -284,8 +272,7 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 		return result;
 	}
 	
-//	여기서부터 수정
-	
+//	여기서부터 수정	
 	//KBH
 	@Override
 	public List<ElctrnsanctnVO> getElctrnsanctnVOListSm(Map<String, Object> map) {
