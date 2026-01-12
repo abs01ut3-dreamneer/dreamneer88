@@ -264,7 +264,7 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 		map.put("elctrnsanctnSn", sanctnlnVO.getElctrnsanctnSn());
 
 		int stamping=sanctnlnVO.getDcrbmanAt();
-		System.out.println("나나나나"+stamping);
+		System.out.println("성공"+stamping);
 		if(stamping==1){
 			ElctrnsanctnVO elctrnsanctnVO = new ElctrnsanctnVO();
 			elctrnsanctnVO.setElctrnsanctnSn(sanctnlnVO.getElctrnsanctnSn());
@@ -277,7 +277,7 @@ public class ElctrncsanctnServiceImpl implements ElctrncsanctnService {
 
 			pdfStampingServiceImpl.createStampedPdfCopy(originalFileVO);
 			
-			System.out.println("나나나나");
+			System.out.println("성공");
 		}
 
 		int result = this.elctrncsanctnMapper.consentElctrnsanctn(map);
