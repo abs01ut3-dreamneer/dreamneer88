@@ -22,7 +22,7 @@ public class EmailScheduler {
     @Autowired
     private EmailService emailService;
 
-    @Scheduled(cron = "0 0 */12 * * *")
+    @Scheduled(cron = "0 55 23 * * *")
     public void sendPendingEmails() {
         try {
             int pendingCount = emailQueueMapper.countPendingEmails();
