@@ -31,6 +31,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 		CustomUser customUser = (CustomUser)auth.getPrincipal();
 		String userType = customUser.getUserType();
 		String targetUrl = null;
+		SavedRequest savedRequest = requestCache.getRequest(request, response);
 		
 		if ("EMP".equals(userType)) {
 			EmpVO empVO = customUser.getEmpVO();
