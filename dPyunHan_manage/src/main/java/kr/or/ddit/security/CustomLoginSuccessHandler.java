@@ -31,8 +31,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 		CustomUser customUser = (CustomUser)auth.getPrincipal();
 		String userType = customUser.getUserType();
 		String targetUrl = null;
-		SavedRequest savedRequest = requestCache.getRequest(request, response);
-		
+				
 		if ("EMP".equals(userType)) {
 			EmpVO empVO = customUser.getEmpVO();
 			log.info("직원 로그인 성공: {}", empVO);
@@ -42,7 +41,7 @@ public class CustomLoginSuccessHandler implements AuthenticationSuccessHandler {
 			log.info("협력업체 로그인 성공: {}", ccpyManageVO);
 			targetUrl = "/bidPblanc/getBidPblancList"; 
 		}
-
+		SavedRequest savedRequest = requestCache.getRequest(request, response);
 		// 1. SavedRequest 우선
 	    if(savedRequest != null) {
 	        String redirectUrl = savedRequest.getRedirectUrl();
